@@ -1,0 +1,51 @@
+{
+  "name": "emoji-usage-bot",
+  "version": "1.0.0",
+  "author": "nayukata",
+  "license": "MIT",
+  "description": "Discord絵文字使用率集計BOT - リアクションに使われた絵文字をランキング形式で投稿",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "start:ts": "tsx src/index.ts",
+    "dev": "tsx --watch src/index.ts",
+    "dev:old": "node --watch src/index.js",
+    "deploy-commands": "tsx -e \"import('./src/bot/deploy-commands.ts').then(m => m.deploySlashCommands())\"",
+    "deploy-commands:old": "node -e \"import('./src/bot/deploy-commands.js').then(m => m.deploySlashCommands())\"",
+    "clear-commands": "tsx -e \"import('./src/bot/deploy-commands.ts').then(m => m.clearSlashCommands())\"",
+    "clear-commands:old": "node -e \"import('./src/bot/deploy-commands.js').then(m => m.clearSlashCommands())\"",
+    "type-check": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "keywords": [
+    "discord",
+    "bot",
+    "emoji",
+    "analytics",
+    "ranking"
+  ],
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/node-cron": "^3.0.11",
+    "@vitest/ui": "^3.2.3",
+    "tsx": "^4.20.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.3"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

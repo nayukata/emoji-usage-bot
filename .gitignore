@@ -1,0 +1,34 @@
+# 環境変数ファイル
+.env
+
+# Node.js関連
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ログファイル
+logs/
+*.log
+
+# データベースファイル
+*.db
+*.sqlite
+*.sqlite3
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# エディタ関連
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 一時ファイル
+tmp/
+temp/
+
+# ビルド関連
+dist/
