@@ -32,3 +32,6 @@ temp/
 
 # ビルド関連
 dist/
+
+# テスト関連
+coverage/
