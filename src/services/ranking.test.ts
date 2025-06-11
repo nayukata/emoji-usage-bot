@@ -1,7 +1,7 @@
 // ランキング表示サービスのテスト
 import { describe, test, expect, beforeEach, vi } from 'vitest'
 import type { EmojiStats, AnalysisSummary, ChannelStats } from '../types/index'
-import { createSimpleRankingText } from './ranking'
+import { createSimpleRankingText, createSimpleWorstRankingText } from './ranking'
 
 // logger をモック
 vi.mock('../utils/logger', () => ({
@@ -233,6 +233,182 @@ describe('ranking.ts', () => {
 
       // 小数点1桁で丸められることを確認
       expect(result).toContain('33回 (33.3%)')
+    })
+  })
+
+  describe('createSimpleWorstRankingText関数', () => {
+    test('空の絵文字統計で適切なメッセージを返す', () => {
+      const mockSummary: AnalysisSummary = {
+        totalReactions: 0,
+        uniqueEmojis: 0,
+        topEmoji: null
+      }
+
+      const result = createSimpleWorstRankingText([], mockSummary)
+
+      expect(result).toBe('絵文字使用率ワーストランキング\n\nリアクションが見つかりませんでした。')
+    })
+
+    test('正常な絵文字統計で正しいワーストランキングテキストを生成する', () => {
+      const mockEmojiStats: EmojiStats[] = [
+        {
+          identifier: 'thumbs_up',
+          name: '👍',
+          type: 'unicode',
+          id: null,
+          animated: false,
+          totalCount: 50,
+          messageCount: 10,
+          reactions: [],
+          usageRate: 50.0,
+          avgPerMessage: 5.0,
+          displayFormat: '👍',
+          safeName: '👍'
+        },
+        {
+          identifier: 'heart',
+          name: '❤️',
+          type: 'unicode',
+          id: null,
+          animated: false,
+          totalCount: 20,
+          messageCount: 8,
+          reactions: [],
+          usageRate: 20.0,
+          avgPerMessage: 2.5,
+          displayFormat: '❤️',
+          safeName: '❤️'
+        },
+        {
+          identifier: '123456789',
+          name: 'kusa',
+          type: 'custom',
+          id: '123456789',
+          animated: false,
+          totalCount: 10,
+          messageCount: 6,
+          reactions: [],
+          usageRate: 10.0,
+          avgPerMessage: 1.67,
+          displayFormat: '<:kusa:123456789>',
+          safeName: ':kusa:'
+        }
+      ]
+
+      const mockSummary: AnalysisSummary = {
+        totalReactions: 80,
+        uniqueEmojis: 3,
+        topEmoji: mockEmojiStats[0] || null
+      }
+
+      const result = createSimpleWorstRankingText(mockEmojiStats, mockSummary)
+
+      // 基本構造の確認
+      expect(result).toContain('💔 **絵文字使用率ワーストランキング (TOP 10)**')
+      expect(result).toContain('📊 **総リアクション数**: 80個')
+      expect(result).toContain('🎨 **絵文字種類数**: 3種類')
+
+      // ワーストランキング内容の確認（使用率の低い順）
+      expect(result).toContain('1. <:kusa:123456789> 10回 (10.0%)')
+      expect(result).toContain('2. ❤️ 20回 (20.0%)')
+      expect(result).toContain('3. 👍 50回 (50.0%)')
+
+      // 順序の確認（使用率の低い順）
+      const lines = result.split('\n')
+      const rank1Index = lines.findIndex(line => line.includes('1. <:kusa:123456789>'))
+      const rank2Index = lines.findIndex(line => line.includes('2. ❤️'))
+      const rank3Index = lines.findIndex(line => line.includes('3. 👍'))
+      
+      expect(rank1Index).toBeLessThan(rank2Index)
+      expect(rank2Index).toBeLessThan(rank3Index)
+    })
+
+    test('使用回数が0の絵文字は除外される', () => {
+      const mockEmojiStats: EmojiStats[] = [
+        {
+          identifier: 'used',
+          name: '👍',
+          type: 'unicode',
+          id: null,
+          animated: false,
+          totalCount: 5,
+          messageCount: 2,
+          reactions: [],
+          usageRate: 50.0,
+          avgPerMessage: 2.5,
+          displayFormat: '👍',
+          safeName: '👍'
+        },
+        {
+          identifier: 'unused',
+          name: '👎',
+          type: 'unicode',
+          id: null,
+          animated: false,
+          totalCount: 0, // 使用回数0
+          messageCount: 0,
+          reactions: [],
+          usageRate: 0.0,
+          avgPerMessage: 0.0,
+          displayFormat: '👎',
+          safeName: '👎'
+        }
+      ]
+
+      const mockSummary: AnalysisSummary = {
+        totalReactions: 5,
+        uniqueEmojis: 2,
+        topEmoji: mockEmojiStats[0] || null
+      }
+
+      const result = createSimpleWorstRankingText(mockEmojiStats, mockSummary)
+
+      // 使用回数が0の絵文字は表示されない
+      expect(result).toContain('1. 👍 5回 (50.0%)')
+      expect(result).not.toContain('👎')
+    })
+
+    test('使用された絵文字がない場合の処理', () => {
+      const mockEmojiStats: EmojiStats[] = [
+        {
+          identifier: 'unused1',
+          name: '👎',
+          type: 'unicode',
+          id: null,
+          animated: false,
+          totalCount: 0,
+          messageCount: 0,
+          reactions: [],
+          usageRate: 0.0,
+          avgPerMessage: 0.0,
+          displayFormat: '👎',
+          safeName: '👎'
+        },
+        {
+          identifier: 'unused2',
+          name: '😭',
+          type: 'unicode',
+          id: null,
+          animated: false,
+          totalCount: 0,
+          messageCount: 0,
+          reactions: [],
+          usageRate: 0.0,
+          avgPerMessage: 0.0,
+          displayFormat: '😭',
+          safeName: '😭'
+        }
+      ]
+
+      const mockSummary: AnalysisSummary = {
+        totalReactions: 0,
+        uniqueEmojis: 2,
+        topEmoji: null
+      }
+
+      const result = createSimpleWorstRankingText(mockEmojiStats, mockSummary)
+
+      expect(result).toBe('絵文字使用率ワーストランキング\n\n使用された絵文字が見つかりませんでした。')
     })
   })
 

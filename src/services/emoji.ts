@@ -304,3 +304,54 @@ export function getTopEmojis(
 ): EmojiStats[] {
   return emojiStats.slice(0, count)
 }
+
+/**
+ * サーバーの未使用カスタム絵文字を検出（最大5個）
+ */
+export function getUnusedCustomEmojis(
+  client: Client<true>,
+  emojiStats: EmojiStats[]
+): Array<{
+  id: string
+  name: string
+  displayFormat: string
+  animated: boolean
+}> {
+  // 使用済みカスタム絵文字のIDセットを作成
+  const usedCustomEmojiIds = new Set(
+    emojiStats
+      .filter(emoji => emoji.type === 'custom' && emoji.id)
+      .map(emoji => emoji.id!)
+  )
+
+  // サーバーに登録されているカスタム絵文字を取得
+  const serverEmojis = client.emojis.cache.values()
+  const unusedEmojis: Array<{
+    id: string
+    name: string
+    displayFormat: string
+    animated: boolean
+  }> = []
+
+  for (const emoji of serverEmojis) {
+    // 使用されていないカスタム絵文字を検出
+    if (!usedCustomEmojiIds.has(emoji.id)) {
+      const animatedPrefix = emoji.animated ? 'a' : ''
+      const displayFormat = `<${animatedPrefix}:${emoji.name}:${emoji.id}>`
+      
+      unusedEmojis.push({
+        id: emoji.id,
+        name: emoji.name || '不明',
+        displayFormat,
+        animated: emoji.animated || false
+      })
+      
+      // 最大5個まで
+      if (unusedEmojis.length >= 5) {
+        break
+      }
+    }
+  }
+
+  return unusedEmojis
+}

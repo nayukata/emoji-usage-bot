@@ -7,8 +7,11 @@ import {
 import type { Client } from 'discord.js'
 import {
   executeEmojiAnalysis,
+  executeWorstRankingAnalysis,
   executeCustomAnalysis,
+  executeCustomWorstAnalysis,
   executeTestAnalysis,
+  executeUnusedEmojisAnalysis,
 } from './commands'
 import { config } from '../utils/config'
 import { logger } from '../utils/logger'
@@ -22,6 +25,7 @@ import { logger } from '../utils/logger'
  * - /emoji days <日数>      指定した日数で絵文字分析を実行
  * - /emoji months <月数>    指定した月数で絵文字分析を実行
  * - /emoji test            テスト用の簡易分析を実行（1日分）
+ * - /emoji unused          未使用のカスタム絵文字を5個表示
  * - /emoji debug           絵文字表示のデバッグ情報を表示
  * - /emoji help            使い方とコマンド一覧を表示
  */
@@ -67,11 +71,47 @@ export const slashCommands = [
     )
     .addSubcommand((subcommand) =>
       subcommand
+        .setName('unused')
+        .setDescription('未使用のカスタム絵文字を5個表示')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
         .setName('debug')
         .setDescription('絵文字表示のデバッグ情報を表示')
     )
     .addSubcommand((subcommand) =>
       subcommand.setName('help').setDescription('使い方とコマンド一覧を表示')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('worst')
+        .setDescription('デフォルト期間でワーストランキングを実行')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('worst-days')
+        .setDescription('指定した日数でワーストランキングを実行')
+        .addIntegerOption((option) =>
+          option
+            .setName('日数')
+            .setDescription('分析する日数（1-365）')
+            .setRequired(true)
+            .setMinValue(1)
+            .setMaxValue(365)
+        )
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('worst-months')
+        .setDescription('指定した月数でワーストランキングを実行')
+        .addIntegerOption((option) =>
+          option
+            .setName('月数')
+            .setDescription('分析する月数（1-12）')
+            .setRequired(true)
+            .setMinValue(1)
+            .setMaxValue(12)
+        )
     ),
 ] as const
 
@@ -98,11 +138,8 @@ export async function handleSlashCommand(
   try {
     switch (subcommand) {
       case 'run':
-        await interaction.reply(
-          '🎯✨ 絵文字の分析を始めるね〜！お待ちください♪'
-        )
+        await interaction.reply('絵文字の分析を始めるね〜！お待ちください♪')
         await executeEmojiAnalysis(interaction.client as Client<true>)
-        await interaction.followUp('✅ 分析完了〜！結果を投稿したよ〜！')
         break
 
       case 'days': {
@@ -119,9 +156,6 @@ export async function handleSlashCommand(
           interaction.client as Client<true>,
           days,
           true
-        )
-        await interaction.followUp(
-          `✅ 過去${days}日間の分析完了〜！結果を投稿したよ〜！`
         )
         break
       }
@@ -141,9 +175,6 @@ export async function handleSlashCommand(
           interaction.client as Client<true>,
           days,
           true
-        )
-        await interaction.followUp(
-          `✅ 過去${months}ヶ月間の分析完了〜！結果を投稿したよ〜！`
         )
         break
       }
@@ -212,27 +243,90 @@ export async function handleSlashCommand(
         break
       }
 
+      case 'worst':
+        await interaction.reply(
+          'ワーストランキングの分析を始めるね〜！お待ちください♪'
+        )
+        await executeWorstRankingAnalysis(interaction.client as Client<true>)
+        break
+
+      case 'worst-days': {
+        const days = options.getInteger('日数')
+        if (!days) {
+          await interaction.reply('❌ 日数の指定が正しくありません')
+          break
+        }
+
+        await interaction.reply(
+          `過去${days}日間のワーストランキングを調べるね〜！ちょっと待ってて♪`
+        )
+        await executeCustomWorstAnalysis(
+          interaction.client as Client<true>,
+          days,
+          true
+        )
+        break
+      }
+
+      case 'worst-months': {
+        const months = options.getInteger('月数')
+        if (!months) {
+          await interaction.reply('❌ 月数の指定が正しくありません')
+          break
+        }
+
+        const days = months * 30 // 概算
+        await interaction.reply(
+          `過去${months}ヶ月間（約${days}日間）のワーストランキングを調べるね〜！がんばる♪`
+        )
+        await executeCustomWorstAnalysis(
+          interaction.client as Client<true>,
+          days,
+          true
+        )
+        break
+      }
+
+      case 'unused': {
+        await interaction.reply('未使用のカスタム絵文字を調べるね〜！ちょっと待ってて♪')
+        if (interaction.client.isReady()) {
+          const result = await executeUnusedEmojisAnalysis(interaction.client)
+          await interaction.followUp(result)
+        }
+        break
+      }
+
       case 'help': {
         const helpText = `
 ✨ **EMOJI 集計ちゃん - 使い方だよ〜♪**
 
+**🏆 通常ランキング:**
 \`/emoji run\` - 設定期間で絵文字分析するよ〜！
 \`/emoji days <日数>\` - 指定した日数分を調べるよ〜
 \`/emoji months <月数>\` - 指定した月数分を調べるよ〜
+
+**💔 ワーストランキング:**
+\`/emoji worst\` - 設定期間でワーストランキングを調べるよ〜！
+\`/emoji worst-days <日数>\` - 指定期間のワーストランキング
+\`/emoji worst-months <月数>\` - 指定期間のワーストランキング
+
+**🔍 その他の機能:**
+\`/emoji unused\` - 未使用のカスタム絵文字を5個表示するよ〜！
 \`/emoji test\` - テスト分析をやってみるよ〜（1日分）
 \`/emoji debug\` - 絵文字表示のデバッグ情報を見るよ〜
 \`/emoji help\` - この使い方を表示するよ〜
 
 💕 **集計ちゃんの設定**
-**自動実行スケジュール**: ${config.schedule.cron}
+**自動実行スケジュール**: ${config.schedule.cron || '手動実行のみ'}
 **デフォルト集計期間**: ${config.analysis.days}日間
 **対象チャンネル**: ${config.channels.targets.length}個
 
-  **使用例:**
-• \`/emoji days 7\` → 過去1週間の絵文字を調べるよ〜
-• \`/emoji days 30\` → 過去1ヶ月の絵文字を調べるよ〜
-• \`/emoji months 1\` → 過去1ヶ月の絵文字を調べるよ〜
-• \`/emoji months 6\` → 過去6ヶ月の絵文字を調べるよ〜
+**使用例:**
+• \`/emoji days 7\` → 過去1週間の人気ランキング
+• \`/emoji worst-days 7\` → 過去1週間のワーストランキング
+• \`/emoji months 1\` → 過去1ヶ月の人気ランキング
+• \`/emoji worst-months 1\` → 過去1ヶ月のワーストランキング
+• \`/emoji unused\` → 最近使われていないカスタム絵文字を発見
 
 頑張って集計するから、お気軽に声をかけてね〜♪
         `

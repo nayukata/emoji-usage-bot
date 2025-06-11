@@ -299,6 +299,171 @@ export async function postRankingReport(
 }
 
 /**
+ * ワーストランキングのEmbedを作成
+ */
+function createWorstRankingEmbed(
+  emojiStats: EmojiStats[],
+  typeStats: TypeStats,
+  summary: AnalysisSummary,
+  analysisInfo: AnalysisInfo
+): EmbedBuilder {
+  // 使用回数が1回以上ある絵文字から、使用率の低い順にソート
+  const usedEmojis = emojiStats.filter(emoji => emoji.totalCount > 0)
+  const worstEmojis = [...usedEmojis]
+    .sort((a, b) => a.usageRate - b.usageRate)
+    .slice(0, config.analysis.topCount)
+
+  const embed = new EmbedBuilder()
+    .setTitle('😅 EMOJI 集計ちゃんのワーストランキング発表〜')
+    .setColor(0x95a5a6)
+    .setTimestamp()
+
+  // 分析期間の情報
+  const actualDays = analysisInfo.actualDays || config.analysis.days
+  const periodInfo =
+    `**調べた期間**: ${actualDays}日間だよ〜\n` +
+    `**対象チャンネル**: ${config.channels.targets.length}個\n` +
+    `**調べたメッセージ数**: ${formatNumber(analysisInfo.totalMessages)}件`
+
+  embed.addFields({ name: '集計ちゃんからの報告', value: periodInfo })
+
+  // サマリー情報
+  const summaryInfo =
+    `**見つけたリアクション**: ${formatNumber(summary.totalReactions)}個！\n` +
+    `**絵文字の種類**: ${formatNumber(summary.uniqueEmojis)}種類\n` +
+    `**標準絵文字**: ${typeStats.unicode.count}種類 (${formatPercentage(
+      typeStats.unicode.percentage
+    )})\n` +
+    `**カスタム絵文字**: ${typeStats.custom.count}種類 (${formatPercentage(
+      typeStats.custom.percentage
+    )})`
+
+  embed.addFields({ name: '集計結果だよ〜', value: summaryInfo })
+
+  // ワーストランキング情報
+  if (worstEmojis.length === 0) {
+    embed.addFields({
+      name: '💔 ワーストランキング発表〜',
+      value: 'あれれ？使用された絵文字が見つからなかったよ〜💦',
+    })
+  } else {
+    // ワースト10位
+    const worst10 = worstEmojis.slice(0, 10)
+    const worst10Text = worst10
+      .map((emoji, index) => {
+        const rank = index + 1
+        const emojiDisplay = emoji.displayFormat
+        const count = formatNumber(emoji.totalCount)
+        const percentage = formatPercentage(emoji.usageRate)
+        return `${rank}. ${emojiDisplay} **${count}回** (${percentage})`
+      })
+      .join('\n')
+
+    embed.addFields({ 
+      name: '💔 使用率が少ない絵文字 TOP 10', 
+      value: worst10Text 
+    })
+
+    // 11位～20位（存在する場合）
+    if (worstEmojis.length > 10) {
+      const remaining = worstEmojis.slice(10)
+      const remainingText = remaining
+        .map((emoji, index) => {
+          const rank = index + 11
+          const emojiDisplay = emoji.displayFormat
+          const count = formatNumber(emoji.totalCount)
+          const percentage = formatPercentage(emoji.usageRate)
+          return `${rank}. ${emojiDisplay} **${count}回** (${percentage})`
+        })
+        .join('\n')
+
+      embed.addFields({ 
+        name: '📉 ワースト 11-20 も発表〜', 
+        value: remainingText 
+      })
+    }
+  }
+
+  // 最も使用率の低い絵文字
+  if (worstEmojis.length > 0) {
+    const worstEmoji = worstEmojis[0]
+    if (worstEmoji) {
+      const worstEmojiDisplay = worstEmoji.displayFormat
+      embed.addFields({
+        name: '😢 一番使用率が低い絵文字は〜',
+        value: `${worstEmojiDisplay} **${formatNumber(
+          worstEmoji.totalCount
+        )}回** しか使われてない...もっと使ってあげて〜💦`,
+      })
+    }
+  }
+
+  embed.setFooter({
+    text: `みんなでいろんな絵文字を使おうね〜♪ | EMOJI 集計ちゃん♪`,
+  })
+
+  return embed
+}
+
+/**
+ * ワーストランキングレポートを投稿
+ */
+export async function postWorstRankingReport(
+  client: Client<true>,
+  analysisResult: AnalysisResult,
+  analysisInfo: AnalysisInfo
+): Promise<void> {
+  try {
+    const { emojiStats, typeStats, summary } = analysisResult
+
+    // 投稿先チャンネルを取得
+    const channel = await client.channels.fetch(config.channels.report)
+    if (!channel) {
+      throw new Error(
+        `投稿先チャンネル ${config.channels.report} が見つかりません`
+      )
+    }
+
+    if (!channel.isTextBased()) {
+      throw new Error('投稿先チャンネルがテキストチャンネルではありません')
+    }
+
+    const textChannel = channel as TextChannel
+
+    logger.info(`📤 ワーストランキングレポートを ${textChannel.name} に投稿中...`)
+
+    // ワーストランキングEmbed
+    const worstRankingEmbed = createWorstRankingEmbed(
+      emojiStats,
+      typeStats,
+      summary,
+      analysisInfo
+    )
+
+    // メッセージを投稿
+    await textChannel.send({ embeds: [worstRankingEmbed] })
+
+    logger.info('✅ ワーストランキングレポートの投稿が完了しました')
+  } catch (error: unknown) {
+    const err = error as { code?: number; message?: string }
+    logger.error('ワーストランキングレポート投稿エラー', { error: err.message })
+
+    // 権限エラーの場合はより詳細なメッセージ
+    if (err.code === 50001 || err.message?.includes('Missing Access')) {
+      throw new Error(
+        '投稿先チャンネルへの送信権限がありません。BOTに「メッセージを送信」権限を付与してください。'
+      )
+    } else if (err.code === 50013) {
+      throw new Error(
+        '投稿先チャンネルへのアクセス権限がありません。BOTに必要な権限を付与してください。'
+      )
+    }
+
+    throw error
+  }
+}
+
+/**
  * 簡易ランキングテキストを作成（テスト用）
  */
 export function createSimpleRankingText(
@@ -323,6 +488,44 @@ export function createSimpleRankingText(
 
   return (
     `✨ **絵文字使用率ランキング (TOP 10)**\n\n${rankingText}\n\n` +
+    `📊 **総リアクション数**: ${formatNumber(summary.totalReactions)}個\n` +
+    `🎨 **絵文字種類数**: ${formatNumber(summary.uniqueEmojis)}種類`
+  )
+}
+
+/**
+ * 簡易ワーストランキングテキストを作成（テスト用）
+ */
+export function createSimpleWorstRankingText(
+  emojiStats: EmojiStats[],
+  summary: AnalysisSummary
+): string {
+  if (emojiStats.length === 0) {
+    return '絵文字使用率ワーストランキング\n\nリアクションが見つかりませんでした。'
+  }
+
+  // 使用回数が1回以上ある絵文字から、使用率の低い順にソート
+  const usedEmojis = emojiStats.filter(emoji => emoji.totalCount > 0)
+  const worstEmojis = [...usedEmojis]
+    .sort((a, b) => a.usageRate - b.usageRate)
+    .slice(0, 10)
+
+  if (worstEmojis.length === 0) {
+    return '絵文字使用率ワーストランキング\n\n使用された絵文字が見つかりませんでした。'
+  }
+
+  const rankingText = worstEmojis
+    .map((emoji, index) => {
+      const rank = index + 1
+      const emojiDisplay = emoji.displayFormat
+      return `${rank}. ${emojiDisplay} ${
+        emoji.totalCount
+      }回 (${formatPercentage(emoji.usageRate)})`
+    })
+    .join('\n')
+
+  return (
+    `💔 **絵文字使用率ワーストランキング (TOP 10)**\n\n${rankingText}\n\n` +
     `📊 **総リアクション数**: ${formatNumber(summary.totalReactions)}個\n` +
     `🎨 **絵文字種類数**: ${formatNumber(summary.uniqueEmojis)}種類`
   )
