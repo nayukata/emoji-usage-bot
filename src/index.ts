@@ -25,7 +25,7 @@ interface HealthResponse {
  * ヘルスチェック用HTTPサーバーを作成
  */
 function createHealthServer(): Server {
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3050
 
   const server = createServer((req, res) => {
     const url = req.url || '/'
