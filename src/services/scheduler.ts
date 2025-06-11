@@ -27,11 +27,17 @@ let scheduledTask: ScheduledTask | null = null
 /**
  * 定期実行タスクの設定
  */
-export function setupScheduledAnalysis(client: Client<true>): ScheduledTask {
+export function setupScheduledAnalysis(client: Client<true>): ScheduledTask | null {
   // 既存のタスクがあれば停止
   if (scheduledTask) {
     scheduledTask.stop()
     logger.info('既存のスケジュールタスクを停止しました')
+  }
+
+  // スケジュール設定がない場合はスキップ
+  if (!config.schedule.cron) {
+    logger.info('⏰ スケジュール設定が見つかりません。手動実行のみで動作します')
+    return null
   }
 
   logger.info(`⏰ 定期実行スケジュールを設定: ${config.schedule.cron}`)
@@ -81,7 +87,7 @@ export function stopScheduledAnalysis(): void {
  * 次回実行時刻の取得
  */
 export function getNextExecutionTime(): Date | null {
-  if (!scheduledTask) {
+  if (!scheduledTask || !config.schedule.cron) {
     return null
   }
 
@@ -112,7 +118,7 @@ export function getNextExecutionTime(): Date | null {
 export function getScheduleStatus(): ScheduleStatus {
   return {
     isActive: scheduledTask !== null,
-    cronExpression: config.schedule.cron,
+    cronExpression: config.schedule.cron || '',
     nextExecution: getNextExecutionTime(),
     timezone: config.schedule.timezone,
   }

@@ -62,9 +62,9 @@ export const config: BotConfig = {
     topCount: getNumberEnv('TOP_EMOJI_COUNT', 20),
   },
 
-  // スケジュール設定
+  // スケジュール設定（任意）
   schedule: {
-    cron: process.env.SCHEDULE_CRON || '0 10 * * 1', // 毎週月曜日10:00
+    cron: process.env.SCHEDULE_CRON || null, // 設定されていない場合はnull
     timezone: process.env.SCHEDULE_TIMEZONE || 'Asia/Tokyo',
   },
 
@@ -125,7 +125,7 @@ export function getConfigSummary(): Record<string, unknown> {
     reportChannel: config.channels.report,
     analysisDays: config.analysis.days,
     topCount: config.analysis.topCount,
-    schedule: config.schedule.cron,
+    schedule: config.schedule.cron || '手動実行のみ',
     development: config.development,
   }
 }

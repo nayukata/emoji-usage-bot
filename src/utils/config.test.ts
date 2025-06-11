@@ -171,7 +171,7 @@ describe('config.ts', () => {
         reportChannel: '111222333444555666',
         analysisDays: 14,
         topCount: 20,
-        schedule: '0 10 * * 1',
+        schedule: '手動実行のみ',
         development: false
       })
     })

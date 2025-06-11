@@ -188,8 +188,8 @@ export interface BotConfig {
   }
   /** スケジュール設定 */
   schedule: {
-    /** cron式 */
-    cron: string
+    /** cron式（設定されていない場合はnull） */
+    cron: string | null
     /** タイムゾーン */
     timezone: string
   }
