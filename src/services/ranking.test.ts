@@ -95,9 +95,9 @@ describe('ranking.ts', () => {
       const result = createSimpleRankingText(mockEmojiStats, mockSummary)
 
       // 基本構造の確認
-      expect(result).toContain('✨ **絵文字使用率ランキング (TOP 10)**')
-      expect(result).toContain('📊 **総リアクション数**: 100個')
-      expect(result).toContain('🎨 **絵文字種類数**: 3種類')
+      expect(result).toContain('**絵文字使用率ランキング (TOP 10)**')
+      expect(result).toContain('**総リアクション数**: 100個')
+      expect(result).toContain('**絵文字種類数**: 3種類')
 
       // ランキング内容の確認
       expect(result).toContain('1. 👍 50回 (50.0%)')
@@ -304,9 +304,9 @@ describe('ranking.ts', () => {
       const result = createSimpleWorstRankingText(mockEmojiStats, mockSummary)
 
       // 基本構造の確認
-      expect(result).toContain('💔 **絵文字使用率ワーストランキング (TOP 10)**')
-      expect(result).toContain('📊 **総リアクション数**: 80個')
-      expect(result).toContain('🎨 **絵文字種類数**: 3種類')
+      expect(result).toContain('**絵文字使用率ワーストランキング (TOP 10)**')
+      expect(result).toContain('**総リアクション数**: 80個')
+      expect(result).toContain('**絵文字種類数**: 3種類')
 
       // ワーストランキング内容の確認（使用率の低い順）
       expect(result).toContain('1. <:kusa:123456789> 10回 (10.0%)')
@@ -519,9 +519,9 @@ describe('ranking.ts', () => {
 
       // 最低限の構造を持つことを確認
       expect(lines.length).toBeGreaterThan(5)
-      expect(result).toMatch(/✨.*絵文字使用率ランキング.*TOP 10/)
-      expect(result).toMatch(/📊.*総リアクション数.*個/)
-      expect(result).toMatch(/🎨.*絵文字種類数.*種類/)
+      expect(result).toMatch(/絵文字使用率ランキング.*TOP 10/)
+      expect(result).toMatch(/総リアクション数.*個/)
+      expect(result).toMatch(/絵文字種類数.*種類/)
     })
   })
 })

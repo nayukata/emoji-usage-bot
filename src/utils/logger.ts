@@ -95,7 +95,7 @@ class Logger {
     const client = botUser.client as Client<true>
 
     this.info('='.repeat(50))
-    this.info('✨ EMOJI 集計ちゃん 起動完了だよ〜！')
+    this.info('EMOJI 集計ちゃん 起動完了だよ〜！')
     this.info(`BOT名: ${botUser.tag}`)
     this.info(`サーバー数: ${client.guilds.cache.size}`)
     this.info(`集計対象チャンネル数: ${config.channels.targets.length}`)
@@ -109,7 +109,7 @@ class Logger {
    * 集計開始時の情報表示
    */
   logAnalysisStart(channelCount: number, days: number): void {
-    this.info('📊 絵文字の集計を始めるね〜！')
+    this.info('絵文字の集計を始めるね〜！')
     this.info(`対象チャンネル: ${channelCount}個`)
     this.info(`集計期間: ${days}日間`)
   }
@@ -122,7 +122,7 @@ class Logger {
     totalReactions: number,
     emojiCount: number
   ): void {
-    this.info('✅ 絵文字集計が完了したよ〜！')
+    this.info('絵文字集計が完了したよ〜！')
     this.info(`処理メッセージ数: ${totalMessages.toLocaleString('ja-JP')}件`)
     this.info(`総リアクション数: ${totalReactions.toLocaleString('ja-JP')}個`)
     this.info(`絵文字種類数: ${emojiCount}種類`)
@@ -132,7 +132,7 @@ class Logger {
    * スケジュール実行時の情報表示
    */
   logScheduledRun(): void {
-    this.info('⏰ 定期実行による絵文字集計を開始します')
+    this.info('定期実行による絵文字集計を開始します')
   }
 
   /**
@@ -143,7 +143,7 @@ class Logger {
     userId: string,
     guildId: string
   ): void {
-    this.info(`🎯 コマンド実行: /${commandName}`, {
+    this.info(`コマンド実行: /${commandName}`, {
       userId,
       guildId,
       timestamp: new Date().toISOString(),

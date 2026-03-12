@@ -234,7 +234,7 @@ export function analyzeEmojiUsage(
   reactions: ReactionData[],
   client?: Client<true>
 ): AnalysisResult {
-  logger.info('📊 絵文字使用率の分析を開始')
+  logger.info('絵文字使用率の分析を開始')
 
   if (reactions.length === 0) {
     logger.warn('分析対象のリアクションが見つかりませんでした')
@@ -278,7 +278,7 @@ export function analyzeEmojiUsage(
     topEmoji: sortedEmojiStats.length > 0 ? sortedEmojiStats[0] || null : null,
   }
 
-  logger.info('✅ 絵文字使用率の分析が完了')
+  logger.info('絵文字使用率の分析が完了')
   logger.debug('分析結果', {
     totalReactions: summary.totalReactions,
     uniqueEmojis: summary.uniqueEmojis,

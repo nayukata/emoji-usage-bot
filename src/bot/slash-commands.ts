@@ -169,7 +169,7 @@ export async function handleSlashCommand(
       case 'days': {
         const days = options.getInteger('日数')
         if (!days) {
-          await interaction.reply('❌ 日数の指定が正しくありません')
+          await interaction.reply('日数の指定が正しくありません')
           break
         }
 
@@ -188,7 +188,7 @@ export async function handleSlashCommand(
       case 'months': {
         const months = options.getInteger('月数')
         if (!months) {
-          await interaction.reply('❌ 月数の指定が正しくありません')
+          await interaction.reply('月数の指定が正しくありません')
           break
         }
 
@@ -206,7 +206,7 @@ export async function handleSlashCommand(
       }
 
       case 'test': {
-        await interaction.reply('🧪テスト分析をやってみるね〜！')
+        await interaction.reply('テスト分析をやってみるね〜！')
         const testResult = await executeTestAnalysis(
           interaction.client as Client<true>
         )
@@ -217,7 +217,7 @@ export async function handleSlashCommand(
           const topEmoji = testResult.analysisResult.emojiStats[0]
           if (topEmoji) {
             debugInfo =
-              `\n\n**🔍 デバッグ情報 (1位の絵文字)**\n` +
+              `\n\n**デバッグ情報 (1位の絵文字)**\n` +
               `・名前: ${topEmoji.name}\n` +
               `・タイプ: ${topEmoji.type}\n` +
               `・ID: ${topEmoji.id || 'なし'}\n` +
@@ -233,7 +233,7 @@ export async function handleSlashCommand(
           const topChannel = channelStats[0]
           if (topChannel) {
             debugInfo +=
-              `\n\n**📢 チャンネル統計 (1位)**\n` +
+              `\n\n**チャンネル統計 (1位)**\n` +
               `・チャンネル名: ${topChannel.channelName || '不明'}\n` +
               `・リアクション数: ${topChannel.totalReactions}個\n` +
               `・絵文字種類: ${topChannel.uniqueEmojis}種類\n` +
@@ -247,22 +247,22 @@ export async function handleSlashCommand(
       }
 
       case 'debug': {
-        await interaction.reply('🔍 絵文字表示のデバッグ情報を調べるよ〜！')
+        await interaction.reply('絵文字表示のデバッグ情報を調べるよ〜！')
 
         // 基本的なBOT情報を表示
         const client = interaction.client as Client<true>
         const debugInfo =
-          `**🤖 BOT情報**\n` +
+          `**BOT情報**\n` +
           `・BOT名: ${client.user.tag}\n` +
           `・サーバー数: ${client.guilds.cache.size}\n` +
           `・絵文字キャッシュ数: ${client.emojis.cache.size}\n` +
           `・設定チャンネル数: ${config.channels.targets.length}\n\n` +
-          `**⚙️ 設定情報**\n` +
+          `**設定情報**\n` +
           `・分析期間: ${config.analysis.days}日間\n` +
           `・ランキング件数: ${config.analysis.topCount}件\n` +
           `・スケジュール: ${config.schedule.cron}\n` +
           `・開発モード: ${config.development ? 'ON' : 'OFF'}\n\n` +
-          `**🔧 簡易テスト**\n` +
+          `**簡易テスト**\n` +
           `スラッシュコマンド \`/emoji test\` でテスト分析を実行できるよ〜♪`
 
         await interaction.followUp(debugInfo)
@@ -315,7 +315,7 @@ export async function handleSlashCommand(
           trendText += '全体的に横ばいだよ〜'
         }
 
-        await interaction.followUp(`📊 **絵文字トレンドレポート**\n\n${trendText}`)
+        await interaction.followUp(`**絵文字トレンドレポート**\n\n${trendText}`)
         break
       }
 
@@ -350,7 +350,7 @@ export async function handleSlashCommand(
           }
         }
 
-        await interaction.followUp(`🌈 **絵文字多様性レポート**\n\n${diversityText}`)
+        await interaction.followUp(`**絵文字多様性レポート**\n\n${diversityText}`)
         break
       }
 
@@ -404,7 +404,7 @@ export async function handleSlashCommand(
           }
         }
 
-        await interaction.followUp(`📈 **カスタム絵文字 ROI レポート**\n\n${roiText}`)
+        await interaction.followUp(`**カスタム絵文字 ROI レポート**\n\n${roiText}`)
         break
       }
 
@@ -418,7 +418,7 @@ export async function handleSlashCommand(
       case 'worst-days': {
         const days = options.getInteger('日数')
         if (!days) {
-          await interaction.reply('❌ 日数の指定が正しくありません')
+          await interaction.reply('日数の指定が正しくありません')
           break
         }
 
@@ -437,7 +437,7 @@ export async function handleSlashCommand(
       case 'worst-months': {
         const months = options.getInteger('月数')
         if (!months) {
-          await interaction.reply('❌ 月数の指定が正しくありません')
+          await interaction.reply('月数の指定が正しくありません')
           break
         }
 
@@ -465,30 +465,30 @@ export async function handleSlashCommand(
 
       case 'help': {
         const helpText = `
-✨ **EMOJI 集計ちゃん - 使い方だよ〜♪**
+**EMOJI 集計ちゃん - 使い方だよ〜♪**
 
-**🏆 通常ランキング:**
+**通常ランキング:**
 \`/emoji run\` - 設定期間で絵文字分析するよ〜！
 \`/emoji days <日数>\` - 指定した日数分を調べるよ〜
 \`/emoji months <月数>\` - 指定した月数分を調べるよ〜
 
-**💔 ワーストランキング:**
+**ワーストランキング:**
 \`/emoji worst\` - 設定期間でワーストランキングを調べるよ〜！
 \`/emoji worst-days <日数>\` - 指定期間のワーストランキング
 \`/emoji worst-months <月数>\` - 指定期間のワーストランキング
 
-**📊 分析機能:**
+**分析機能:**
 \`/emoji trend\` - 前回と今回の比較トレンドレポート
 \`/emoji diversity\` - 絵文字使用の多様性指数を表示
 \`/emoji roi\` - カスタム絵文字の採用状況を表示
 
-**🔍 その他の機能:**
+**その他の機能:**
 \`/emoji unused\` - 未使用のカスタム絵文字を5個表示するよ〜！
 \`/emoji test\` - テスト分析をやってみるよ〜（1日分）
 \`/emoji debug\` - 絵文字表示のデバッグ情報を見るよ〜
 \`/emoji help\` - この使い方を表示するよ〜
 
-💕 **集計ちゃんの設定**
+**集計ちゃんの設定**
 **自動実行スケジュール**: ${config.schedule.cron || '手動実行のみ'}
 **デフォルト集計期間**: ${config.analysis.days}日間
 **対象チャンネル**: ${config.channels.targets.length}個
@@ -507,13 +507,13 @@ export async function handleSlashCommand(
       }
 
       default:
-        await interaction.reply('❌ 不明なサブコマンドです')
+        await interaction.reply('不明なサブコマンドです')
     }
   } catch (error: unknown) {
     logger.logError(error as Error, 'スラッシュコマンド処理エラー')
 
     const errorMessage =
-      '❌ あわわ...何かエラーが起きちゃった！ログを確認してもらえるかな？'
+      'あわわ...何かエラーが起きちゃった！ログを確認してもらえるかな？'
 
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(errorMessage)

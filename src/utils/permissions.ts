@@ -178,7 +178,7 @@ export function generatePermissionReport(
   channel: GuildChannel,
   botMember: GuildMember
 ): PermissionReport {
-  logger.info('🔍 権限診断を実行中...')
+  logger.info('権限診断を実行中...')
 
   const guildPerms = checkBotPermissions(guild, botMember)
   const channelPerms = checkChannelPermissions(channel, botMember)
@@ -203,12 +203,12 @@ export function generatePermissionReport(
   }
 
   // ログ出力
-  logger.info('📊 権限診断結果:')
+  logger.info('権限診断結果:')
   logger.info(
-    `サーバー権限: ${guildPerms.hasAllPermissions ? '✅ 正常' : '❌ 不足'}`
+    `サーバー権限: ${guildPerms.hasAllPermissions ? '正常' : '不足'}`
   )
   logger.info(
-    `チャンネル権限: ${channelPerms.hasAllPermissions ? '✅ 正常' : '❌ 不足'}`
+    `チャンネル権限: ${channelPerms.hasAllPermissions ? '正常' : '不足'}`
   )
 
   if (guildPerms.missingPermissions.length > 0) {
@@ -232,15 +232,15 @@ export function generatePermissionReport(
  * 権限チェック結果を文字列で表示
  */
 export function formatPermissionResult(result: PermissionCheckResult): string {
-  const status = result.hasAllPermissions ? '✅ 正常' : '❌ 不足'
+  const status = result.hasAllPermissions ? '正常' : '不足'
   let message = `権限状況: ${status}\n`
 
   if (result.hasPermissions.length > 0) {
-    message += `✅ 有効: ${result.hasPermissions.join(', ')}\n`
+    message += `有効: ${result.hasPermissions.join(', ')}\n`
   }
 
   if (result.missingPermissions.length > 0) {
-    message += `❌ 不足: ${result.missingPermissions.join(', ')}`
+    message += `不足: ${result.missingPermissions.join(', ')}`
   }
 
   return message.trim()

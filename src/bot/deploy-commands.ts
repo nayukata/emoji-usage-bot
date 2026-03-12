@@ -21,7 +21,7 @@ export async function deploySlashCommands(): Promise<unknown[]> {
     const commandsData: RESTPostAPIChatInputApplicationCommandsJSONBody[] =
       slashCommands.map((command) => command.toJSON())
 
-    logger.info(`🔄 ${commandsData.length}個のスラッシュコマンドを登録中...`)
+    logger.info(`${commandsData.length}個のスラッシュコマンドを登録中...`)
 
     // グローバルコマンドとして登録（ギルド設定が不要）
     let data: unknown[]
@@ -31,7 +31,7 @@ export async function deploySlashCommands(): Promise<unknown[]> {
       })) as unknown[]
 
       logger.info(
-        `✅ ${data.length}個のスラッシュコマンドがグローバルに登録されました（反映まで最大1時間）`
+        `${data.length}個のスラッシュコマンドがグローバルに登録されました（反映まで最大1時間）`
       )
     } catch (error: unknown) {
       const err = error as { code?: number; message?: string }
@@ -65,14 +65,14 @@ export async function clearSlashCommands(): Promise<void> {
 
     const rest = new REST().setToken(config.token)
 
-    logger.info('🗑️ スラッシュコマンドをクリア中...')
+    logger.info('スラッシュコマンドをクリア中...')
 
     // グローバルコマンドをクリア
     await rest.put(Routes.applicationCommands(config.applicationId), {
       body: [],
     })
 
-    logger.info('✅ グローバルスラッシュコマンドのクリアが完了しました')
+    logger.info('グローバルスラッシュコマンドのクリアが完了しました')
   } catch (error: unknown) {
     logger.logError(error as Error, 'スラッシュコマンドクリアエラー')
     throw error
@@ -88,14 +88,14 @@ export async function listSlashCommands(): Promise<unknown[]> {
 
     const rest = new REST().setToken(config.token)
 
-    logger.info('📋 登録済みスラッシュコマンドを取得中...')
+    logger.info('登録済みスラッシュコマンドを取得中...')
 
     const commands = (await rest.get(
       Routes.applicationCommands(config.applicationId)
     )) as unknown[]
 
     logger.info(
-      `📋 ${
+      `${
         Array.isArray(commands) ? commands.length : 0
       }個のコマンドが登録されています`
     )

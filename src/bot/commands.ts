@@ -36,7 +36,7 @@ export async function executeEmojiAnalysis(
   reportChannelId?: string
 ): Promise<AnalysisResult> {
   try {
-    logger.info('🎯 絵文字使用率分析を実行中...')
+    logger.info('絵文字使用率分析を実行中...')
 
     // メッセージとリアクションの取得
     const analysisInfo = await fetchMessagesAndReactions(
@@ -58,7 +58,7 @@ export async function executeEmojiAnalysis(
       analysisInfo
     ).catch((e) => logger.error('スナップショット保存失敗', { error: String(e) }))
 
-    logger.info('🎉 絵文字使用率分析が正常に完了しました')
+    logger.info('絵文字使用率分析が正常に完了しました')
     return analysisResult
   } catch (error: unknown) {
     logger.logError(error as Error, '絵文字使用率分析エラー')
@@ -74,7 +74,7 @@ export async function executeWorstRankingAnalysis(
   reportChannelId?: string
 ): Promise<AnalysisResult> {
   try {
-    logger.info('🎯 ワーストランキング分析を実行中...')
+    logger.info('ワーストランキング分析を実行中...')
 
     // メッセージとリアクションの取得
     const analysisInfo = await fetchMessagesAndReactions(
@@ -96,7 +96,7 @@ export async function executeWorstRankingAnalysis(
       analysisInfo
     ).catch((e) => logger.error('スナップショット保存失敗', { error: String(e) }))
 
-    logger.info('🎉 ワーストランキング分析が正常に完了しました')
+    logger.info('ワーストランキング分析が正常に完了しました')
     return analysisResult
   } catch (error: unknown) {
     logger.logError(error as Error, 'ワーストランキング分析エラー')
@@ -114,7 +114,7 @@ export async function executeCustomAnalysis(
   reportChannelId?: string
 ): Promise<TestAnalysisResult> {
   try {
-    logger.info(`📊 過去${days}日間の絵文字分析を実行中...`)
+    logger.info(`過去${days}日間の絵文字分析を実行中...`)
 
     const analysisInfo = await fetchMessagesAndReactions(
       client,
@@ -135,7 +135,7 @@ export async function executeCustomAnalysis(
       analysisInfo
     ).catch((e) => logger.error('スナップショット保存失敗', { error: String(e) }))
 
-    logger.info('✅ カスタム期間分析が完了')
+    logger.info('カスタム期間分析が完了')
     return {
       analysisResult,
       analysisInfo,
@@ -160,7 +160,7 @@ export async function executeCustomWorstAnalysis(
   reportChannelId?: string
 ): Promise<TestAnalysisResult> {
   try {
-    logger.info(`📊 過去${days}日間のワーストランキング分析を実行中...`)
+    logger.info(`過去${days}日間のワーストランキング分析を実行中...`)
 
     const analysisInfo = await fetchMessagesAndReactions(
       client,
@@ -181,7 +181,7 @@ export async function executeCustomWorstAnalysis(
       analysisInfo
     ).catch((e) => logger.error('スナップショット保存失敗', { error: String(e) }))
 
-    logger.info('✅ カスタム期間ワースト分析が完了')
+    logger.info('カスタム期間ワースト分析が完了')
     return {
       analysisResult,
       analysisInfo,
@@ -205,7 +205,7 @@ export async function executeTestAnalysis(
   days = 1
 ): Promise<TestAnalysisResult> {
   try {
-    logger.info('🧪 テスト用絵文字分析を実行中...')
+    logger.info('テスト用絵文字分析を実行中...')
 
     const targetChannels = channelId
       ? [channelId]
@@ -219,7 +219,7 @@ export async function executeTestAnalysis(
 
     const analysisResult = analyzeEmojiUsage(analysisInfo.reactions, client)
 
-    logger.info('✅ テスト分析が完了')
+    logger.info('テスト分析が完了')
     return {
       analysisResult,
       analysisInfo,
@@ -241,7 +241,7 @@ export async function executeUnusedEmojisAnalysis(
   client: Client<true>
 ): Promise<string> {
   try {
-    logger.info('🔍 未使用カスタム絵文字の検出を実行中...')
+    logger.info('未使用カスタム絵文字の検出を実行中...')
 
     // メッセージとリアクションの取得（過去7日間）
     const analysisInfo = await fetchMessagesAndReactions(
@@ -260,7 +260,7 @@ export async function executeUnusedEmojisAnalysis(
     )
 
     if (unusedEmojis.length === 0) {
-      return '🎉 すごい！すべてのカスタム絵文字が使われてるよ〜！'
+      return 'すごい！すべてのカスタム絵文字が使われてるよ〜！'
     }
 
     const emojiList = unusedEmojis
@@ -270,9 +270,9 @@ export async function executeUnusedEmojisAnalysis(
       .join('\n')
 
     return (
-      `😢 **最近使われていないカスタム絵文字たち（${unusedEmojis.length}個見つかったよ〜）**\n\n` +
+      `**最近使われていないカスタム絵文字たち（${unusedEmojis.length}個見つかったよ〜）**\n\n` +
       `${emojiList}\n\n` +
-      `この子たちにも愛を注いであげてね🥺\n` +
+      `この子たちにも愛を注いであげてね\n` +
       `過去${config.analysis.days}日間のデータを調べたよ〜`
     )
   } catch (error: unknown) {
@@ -469,7 +469,7 @@ export async function handleManualCommand(message: Message): Promise<void> {
 
         if (!days) {
           await textChannel.send(
-            '❌ 日数は1〜365で指定してね！例: `!emoji days 30` だよ〜\n' +
+            '日数は1〜365で指定してね！例: `!emoji days 30` だよ〜\n' +
               'ワーストランキングを見たい場合は `!emoji days 30 worst` だよ〜'
           )
           break
@@ -499,7 +499,7 @@ export async function handleManualCommand(message: Message): Promise<void> {
 
         if (!months) {
           await textChannel.send(
-            '❌ 月数は1〜12で指定してね！例: `!emoji months 3` だよ〜\n' +
+            '月数は1〜12で指定してね！例: `!emoji months 3` だよ〜\n' +
               'ワーストランキングを見たい場合は `!emoji months 3 worst` だよ〜'
           )
           break
@@ -526,7 +526,7 @@ export async function handleManualCommand(message: Message): Promise<void> {
       }
 
       case 'test': {
-        await textChannel.send('✨ テスト分析をやってみるね〜！')
+        await textChannel.send('テスト分析をやってみるね〜！')
         if (message.client.isReady()) {
           const testResult = await executeTestAnalysis(message.client)
           await textChannel.send(testResult.simpleText)
@@ -573,7 +573,7 @@ export async function handleManualCommand(message: Message): Promise<void> {
             )
             .slice(0, 10)
 
-          let text = `📊 **絵文字トレンドレポート**\n**期間**: ${trendReport.previousDate} → ${trendReport.currentDate}\n\n`
+          let text = `**絵文字トレンドレポート**\n**期間**: ${trendReport.previousDate} → ${trendReport.currentDate}\n\n`
           if (surging.length > 0) {
             text += '**上昇トレンド**\n'
             text += surging
@@ -608,7 +608,7 @@ export async function handleManualCommand(message: Message): Promise<void> {
             message.client
           )
           let text =
-            `🌈 **絵文字多様性レポート**\n\n` +
+            `**絵文字多様性レポート**\n\n` +
             `**Shannon Entropy**: ${report.entropy.toFixed(3)} bit\n` +
             `**正規化エントロピー**: ${report.entropyNormalized.toFixed(3)} (0=偏り / 1=均等)\n` +
             `**Gini係数**: ${report.gini.toFixed(3)} (0=平等 / 1=不平等)\n` +
@@ -636,7 +636,7 @@ export async function handleManualCommand(message: Message): Promise<void> {
           )
         } else {
           const top10 = roiReport.emojis.slice(0, 10)
-          let text = `📈 **カスタム絵文字 ROI レポート**\n**スナップショット数**: ${roiReport.snapshotCount}\n\n`
+          let text = `**カスタム絵文字 ROI レポート**\n**スナップショット数**: ${roiReport.snapshotCount}\n\n`
           text += '**よく使われてるカスタム絵文字 TOP10**\n'
           text += top10
             .map(
@@ -653,32 +653,32 @@ export async function handleManualCommand(message: Message): Promise<void> {
         const helpText = `
 **EMOJI 集計ちゃん - コマンド一覧だよ〜♪**
 
-**🏆 通常ランキング:**
+**通常ランキング:**
 \`!emoji run\` - 設定期間で絵文字分析するよ〜！
 \`!emoji days <日数>\` - 指定した日数分を調べるよ〜（例: \`!emoji days 30\`）
 \`!emoji months <月数>\` - 指定した月数分を調べるよ〜（例: \`!emoji months 3\`）
 
-**💔 ワーストランキング:**
+**ワーストランキング:**
 \`!emoji worst\` - 設定期間でワーストランキングを調べるよ〜！
 \`!emoji days <日数> worst\` - 指定期間のワーストランキング（例: \`!emoji days 30 worst\`）
 \`!emoji months <月数> worst\` - 指定期間のワーストランキング（例: \`!emoji months 3 worst\`）
 
-**📊 分析機能:**
+**分析機能:**
 \`!emoji trend\` - 前回と今回の比較トレンドレポート
 \`!emoji diversity\` - 絵文字使用の多様性指数を表示
 \`!emoji roi\` - カスタム絵文字の採用状況を表示
 
-**🔍 その他の機能:**
+**その他の機能:**
 \`!emoji unused\` - 未使用のカスタム絵文字を5個表示するよ〜！
 \`!emoji test\` - テスト分析をやってみるよ〜（1日分）
 \`!emoji help\` - このヘルプを表示するよ〜
 
-💕 **集計ちゃんの設定**
+**集計ちゃんの設定**
 **自動実行スケジュール**: ${config.schedule.cron || '手動実行のみ'}
 **デフォルト集計期間**: ${config.analysis.days}日間
 **対象チャンネル**: ${config.channels.targets.length}個
 
-✨ **使用例:**
+**使用例:**
 • \`!emoji days 7\` → 過去1週間の人気ランキング
 • \`!emoji days 7 worst\` → 過去1週間のワーストランキング
 • \`!emoji months 1\` → 過去1ヶ月の人気ランキング
@@ -695,13 +695,13 @@ export async function handleManualCommand(message: Message): Promise<void> {
 
       default:
         await textChannel.send(
-          '💦 そのコマンドはわからないよ〜。`!emoji help` で確認してね♪'
+          'そのコマンドはわからないよ〜。`!emoji help` で確認してね♪'
         )
     }
   } catch (error: unknown) {
     logger.logError(error as Error, 'コマンド処理エラー')
     await textChannel.send(
-      '❌ あわわ...何かエラーが起きちゃった！ログを確認してもらえるかな？'
+      'あわわ...何かエラーが起きちゃった！ログを確認してもらえるかな？'
     )
   }
 }

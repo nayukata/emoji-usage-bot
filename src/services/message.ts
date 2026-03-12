@@ -198,7 +198,7 @@ export async function fetchMessagesAndReactions(
       // TextChannelにキャスト（isTextBased()でチェック済み）
       const textChannel = channel as TextChannel
 
-      logger.info(`📥 ${textChannel.name} からメッセージを取得中...`)
+      logger.info(`${textChannel.name} からメッセージを取得中...`)
 
       const messages = await fetchMessagesInPeriod(textChannel, days)
       totalMessages += messages.length
@@ -210,7 +210,7 @@ export async function fetchMessagesAndReactions(
       }
 
       logger.info(
-        `✅ ${textChannel.name}: ${messages.length}件のメッセージ, ${allReactions.length}個のリアクション`
+        `${textChannel.name}: ${messages.length}件のメッセージ, ${allReactions.length}個のリアクション`
       )
     } catch (error: unknown) {
       logger.error(`チャンネル ${channelId} の処理エラー`, {

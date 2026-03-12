@@ -25,7 +25,7 @@ export function createBotClient(): Client {
 
     // 絵文字キャッシュのログ出力
     logger.info(
-      `🎨 利用可能なカスタム絵文字: ${readyClient.emojis.cache.size}個`
+      `利用可能なカスタム絵文字: ${readyClient.emojis.cache.size}個`
     )
 
     // 絵文字の詳細情報をデバッグ出力
@@ -111,13 +111,13 @@ export async function connectBot(): Promise<Client<true>> {
  */
 export async function disconnectBot(client: Client): Promise<void> {
   try {
-    logger.info('🛑 BOTをシャットダウン中...')
+    logger.info('BOTをシャットダウン中...')
 
     if (client.isReady()) {
       client.destroy()
     }
 
-    logger.info('✅ BOTが正常にシャットダウンされました')
+    logger.info('BOTが正常にシャットダウンされました')
   } catch (error: unknown) {
     logger.logError(error as Error, 'BOTシャットダウンエラー')
     throw error

@@ -36,11 +36,11 @@ export function setupScheduledAnalysis(client: Client<true>): ScheduledTask | nu
 
   // スケジュール設定がない場合はスキップ
   if (!config.schedule.cron) {
-    logger.info('⏰ スケジュール設定が見つかりません。手動実行のみで動作します')
+    logger.info('スケジュール設定が見つかりません。手動実行のみで動作します')
     return null
   }
 
-  logger.info(`⏰ 定期実行スケジュールを設定: ${config.schedule.cron}`)
+  logger.info(`定期実行スケジュールを設定: ${config.schedule.cron}`)
 
   // cron式の妥当性を確認
   if (!cron.validate(config.schedule.cron)) {
@@ -55,7 +55,7 @@ export function setupScheduledAnalysis(client: Client<true>): ScheduledTask | nu
 
       try {
         await executeEmojiAnalysis(client)
-        logger.info('✅ スケジュールされた絵文字分析が完了')
+        logger.info('スケジュールされた絵文字分析が完了')
       } catch (error: unknown) {
         logger.logError(error as Error, 'スケジュール実行エラー')
       }
@@ -67,7 +67,7 @@ export function setupScheduledAnalysis(client: Client<true>): ScheduledTask | nu
 
   // タスクを開始
   scheduledTask.start()
-  logger.info('✅ 定期実行スケジュールが正常に開始されました')
+  logger.info('定期実行スケジュールが正常に開始されました')
 
   return scheduledTask
 }
@@ -79,7 +79,7 @@ export function stopScheduledAnalysis(): void {
   if (scheduledTask) {
     scheduledTask.stop()
     scheduledTask = null
-    logger.info('⏹️  定期実行スケジュールを停止しました')
+    logger.info('定期実行スケジュールを停止しました')
   }
 }
 
@@ -130,11 +130,11 @@ export function getScheduleStatus(): ScheduleStatus {
 export async function executeScheduledTaskNow(
   client: Client<true>
 ): Promise<void> {
-  logger.info('🧪 スケジュールタスクを手動実行します')
+  logger.info('スケジュールタスクを手動実行します')
 
   try {
     await executeEmojiAnalysis(client)
-    logger.info('✅ 手動実行による絵文字分析が完了')
+    logger.info('手動実行による絵文字分析が完了')
   } catch (error: unknown) {
     logger.logError(error as Error, '手動実行エラー')
     throw error

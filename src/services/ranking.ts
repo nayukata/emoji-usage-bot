@@ -63,7 +63,7 @@ function createRankingEmbed(
   const topEmojis = emojiStats.slice(0, config.analysis.topCount)
 
   const embed = new EmbedBuilder()
-    .setTitle('✨ EMOJI 集計ちゃんの絵文字ランキング発表〜♪')
+    .setTitle('EMOJI 集計ちゃんの絵文字ランキング発表〜♪')
     .setColor(0xff69b4)
     .setTimestamp()
 
@@ -92,8 +92,8 @@ function createRankingEmbed(
   // ランキング情報
   if (topEmojis.length === 0) {
     embed.addFields({
-      name: '🏆 ランキング発表〜',
-      value: 'あれれ？リアクションが見つからなかったよ〜💦',
+      name: 'ランキング発表〜',
+      value: 'あれれ？リアクションが見つからなかったよ〜',
     })
   } else {
     // 上位10位
@@ -102,7 +102,7 @@ function createRankingEmbed(
       .map((emoji, index) => formatRankingItem(emoji, index + 1))
       .join('\n')
 
-    embed.addFields({ name: '🏆 TOP 10 発表〜♪', value: top10Text })
+    embed.addFields({ name: 'TOP 10 発表〜♪', value: top10Text })
 
     // 11位～20位（存在する場合）
     if (topEmojis.length > 10) {
@@ -111,7 +111,7 @@ function createRankingEmbed(
         .map((emoji, index) => formatRankingItem(emoji, index + 11))
         .join('\n')
 
-      embed.addFields({ name: '📊 TOP 11-20 も発表〜', value: remainingText })
+      embed.addFields({ name: 'TOP 11-20 も発表〜', value: remainingText })
     }
 
     // カスタム絵文字の情報
@@ -119,7 +119,7 @@ function createRankingEmbed(
     if (customEmojis.length > 0) {
       const customInfo = `このサーバーではカスタム絵文字が${customEmojis.length}種類使われてるよ〜♪\n\n`
 
-      embed.addFields({ name: '🎨 カスタム絵文字について', value: customInfo })
+      embed.addFields({ name: 'カスタム絵文字について', value: customInfo })
     }
   }
 
@@ -129,7 +129,7 @@ function createRankingEmbed(
     // カスタム絵文字もdisplayFormatを使用
     const topEmojiDisplay = topEmoji.displayFormat
     embed.addFields({
-      name: '👑 一番人気の絵文字は〜',
+      name: '一番人気の絵文字は〜',
       value: `${topEmojiDisplay} **${formatNumber(
         topEmoji.totalCount
       )}回** も使われてる！すごいね〜♪`,
@@ -170,13 +170,13 @@ function createChannelRankingEmbed(
   totalReactions: number
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
-    .setTitle('📢 チャンネル別リアクションランキング')
+    .setTitle('チャンネル別リアクションランキング')
     .setColor(0x57f287)
     .setTimestamp()
 
   if (channelStats.length === 0) {
     embed.addFields({
-      name: '🏆 チャンネルランキング',
+      name: 'チャンネルランキング',
       value: 'データがありません',
     })
     return embed
@@ -206,7 +206,7 @@ function createChannelRankingEmbed(
     .join('\n\n')
 
   embed.addFields({
-    name: '🏆 リアクション数 TOP 5',
+    name: 'リアクション数 TOP 5',
     value: channelRanking,
   })
 
@@ -219,7 +219,7 @@ function createChannelRankingEmbed(
     )}個`
 
   embed.addFields({
-    name: '📊 チャンネル統計',
+    name: 'チャンネル統計',
     value: summaryInfo,
   })
 
@@ -253,7 +253,7 @@ export async function postRankingReport(
 
     const textChannel = channel as TextChannel
 
-    logger.info(`📤 ランキングレポートを ${textChannel.name} に投稿中...`)
+    logger.info(`ランキングレポートを ${textChannel.name} に投稿中...`)
 
     // メインのランキングEmbed
     const rankingEmbed = createRankingEmbed(
@@ -280,7 +280,7 @@ export async function postRankingReport(
       await new Promise((resolve) => setTimeout(resolve, 1000)) // 1秒待機
     }
 
-    logger.info('✅ ランキングレポートの投稿が完了しました')
+    logger.info('ランキングレポートの投稿が完了しました')
   } catch (error: unknown) {
     const err = error as { code?: number; message?: string }
     logger.error('ランキングレポート投稿エラー', { error: err.message })
@@ -316,7 +316,7 @@ function createWorstRankingEmbed(
     .slice(0, config.analysis.topCount)
 
   const embed = new EmbedBuilder()
-    .setTitle('😅 EMOJI 集計ちゃんのワーストランキング発表〜')
+    .setTitle('EMOJI 集計ちゃんのワーストランキング発表〜')
     .setColor(0x95a5a6)
     .setTimestamp()
 
@@ -345,8 +345,8 @@ function createWorstRankingEmbed(
   // ワーストランキング情報
   if (worstEmojis.length === 0) {
     embed.addFields({
-      name: '💔 ワーストランキング発表〜',
-      value: 'あれれ？使用された絵文字が見つからなかったよ〜💦',
+      name: 'ワーストランキング発表〜',
+      value: 'あれれ？使用された絵文字が見つからなかったよ〜',
     })
   } else {
     // ワースト10位
@@ -362,7 +362,7 @@ function createWorstRankingEmbed(
       .join('\n')
 
     embed.addFields({ 
-      name: '💔 使用率が少ない絵文字 TOP 10', 
+      name: '使用率が少ない絵文字 TOP 10',
       value: worst10Text 
     })
 
@@ -380,7 +380,7 @@ function createWorstRankingEmbed(
         .join('\n')
 
       embed.addFields({ 
-        name: '📉 ワースト 11-20 も発表〜', 
+        name: 'ワースト 11-20 も発表〜',
         value: remainingText 
       })
     }
@@ -392,10 +392,10 @@ function createWorstRankingEmbed(
     if (worstEmoji) {
       const worstEmojiDisplay = worstEmoji.displayFormat
       embed.addFields({
-        name: '😢 一番使用率が低い絵文字は〜',
+        name: '一番使用率が低い絵文字は〜',
         value: `${worstEmojiDisplay} **${formatNumber(
           worstEmoji.totalCount
-        )}回** しか使われてない...もっと使ってあげて〜💦`,
+        )}回** しか使われてない...もっと使ってあげて〜`,
       })
     }
   }
@@ -434,7 +434,7 @@ export async function postWorstRankingReport(
 
     const textChannel = channel as TextChannel
 
-    logger.info(`📤 ワーストランキングレポートを ${textChannel.name} に投稿中...`)
+    logger.info(`ワーストランキングレポートを ${textChannel.name} に投稿中...`)
 
     // ワーストランキングEmbed
     const worstRankingEmbed = createWorstRankingEmbed(
@@ -447,7 +447,7 @@ export async function postWorstRankingReport(
     // メッセージを投稿
     await textChannel.send({ embeds: [worstRankingEmbed] })
 
-    logger.info('✅ ワーストランキングレポートの投稿が完了しました')
+    logger.info('ワーストランキングレポートの投稿が完了しました')
   } catch (error: unknown) {
     const err = error as { code?: number; message?: string }
     logger.error('ワーストランキングレポート投稿エラー', { error: err.message })
@@ -491,9 +491,9 @@ export function createSimpleRankingText(
     .join('\n')
 
   return (
-    `✨ **絵文字使用率ランキング (TOP 10)**\n\n${rankingText}\n\n` +
-    `📊 **総リアクション数**: ${formatNumber(summary.totalReactions)}個\n` +
-    `🎨 **絵文字種類数**: ${formatNumber(summary.uniqueEmojis)}種類`
+    `**絵文字使用率ランキング (TOP 10)**\n\n${rankingText}\n\n` +
+    `**総リアクション数**: ${formatNumber(summary.totalReactions)}個\n` +
+    `**絵文字種類数**: ${formatNumber(summary.uniqueEmojis)}種類`
   )
 }
 
@@ -529,8 +529,8 @@ export function createSimpleWorstRankingText(
     .join('\n')
 
   return (
-    `💔 **絵文字使用率ワーストランキング (TOP 10)**\n\n${rankingText}\n\n` +
-    `📊 **総リアクション数**: ${formatNumber(summary.totalReactions)}個\n` +
-    `🎨 **絵文字種類数**: ${formatNumber(summary.uniqueEmojis)}種類`
+    `**絵文字使用率ワーストランキング (TOP 10)**\n\n${rankingText}\n\n` +
+    `**総リアクション数**: ${formatNumber(summary.totalReactions)}個\n` +
+    `**絵文字種類数**: ${formatNumber(summary.uniqueEmojis)}種類`
   )
 }

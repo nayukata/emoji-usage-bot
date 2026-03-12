@@ -160,7 +160,7 @@ describe('logger.ts', () => {
       
       expect(mockConsole.log).toHaveBeenCalledOnce()
       const logOutput = (mockConsole.log as MockedFunction<typeof console.log>).mock.calls[0]?.[0]
-      expect(logOutput).toContain('INFO: 🎯 コマンド実行: /emoji test')
+      expect(logOutput).toContain('INFO: コマンド実行: /emoji test')
       expect(logOutput).toContain('123456789')
       expect(logOutput).toContain('987654321')
     })

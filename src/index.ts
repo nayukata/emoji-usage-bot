@@ -46,16 +46,16 @@ function createHealthServer(): Server {
     } else if (url === '/') {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' })
       res.end(
-        '✨ EMOJI 集計ちゃん稼働中だよ〜♪\n\n/health エンドポイントでヘルスチェックができるよ〜'
+        'EMOJI 集計ちゃん稼働中だよ〜♪\n\n/health エンドポイントでヘルスチェックができるよ〜'
       )
     } else {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' })
-      res.end('404 - ページが見つからないよ〜💦')
+      res.end('404 - ページが見つからないよ〜')
     }
   })
 
   server.listen(port, () => {
-    logger.info(`🌐 HTTPサーバーがポート${port}で起動しました`)
+    logger.info(`HTTPサーバーがポート${port}で起動しました`)
   })
 
   return server
@@ -69,7 +69,7 @@ async function startApplication(): Promise<void> {
   let server: Server | null = null
 
   try {
-    logger.info('🚀 EMOJI 集計ちゃん v2.0.0 (TypeScript) を起動中だよ〜！')
+    logger.info('EMOJI 集計ちゃん v2.0.0 (TypeScript) を起動中だよ〜！')
 
     // ヘルスチェック用HTTPサーバー（デプロイ用）
     server = createHealthServer()
@@ -90,7 +90,7 @@ async function startApplication(): Promise<void> {
         // スケジュール設定
         setupScheduledAnalysis(readyClient)
 
-        logger.info('🎉 全ての初期設定が完了しました！')
+        logger.info('全ての初期設定が完了しました！')
       } catch (error: unknown) {
         logger.logError(error as Error, '初期設定エラー')
       }
@@ -99,7 +99,7 @@ async function startApplication(): Promise<void> {
     // 正常終了時の処理
     const cleanup = async (signal?: string): Promise<void> => {
       logger.info(
-        `⏹️💕 集計ちゃんを終了するよ〜！また後でね〜♪ (${signal || 'unknown'})`
+        `集計ちゃんを終了するよ〜！また後でね〜♪ (${signal || 'unknown'})`
       )
 
       try {
