@@ -1,6 +1,12 @@
 // コマンド処理 - ユーザーからのコマンドを処理する
 import type { Client, Message, TextChannel } from 'discord.js'
-import type { AnalysisResult, TestAnalysisResult } from '../types/index'
+import type {
+  AnalysisResult,
+  TestAnalysisResult,
+  TrendReport,
+  DiversityReport,
+  ROIReport,
+} from '../types/index'
 import { fetchMessagesAndReactions } from '../services/message'
 import { analyzeEmojiUsage, getUnusedCustomEmojis } from '../services/emoji'
 import {
@@ -9,6 +15,16 @@ import {
   createSimpleRankingText,
   createSimpleWorstRankingText,
 } from '../services/ranking'
+import { saveAnalysisSnapshot } from '../services/snapshot'
+import { calculateDiversityReport } from '../services/diversity'
+import { calculateTrends } from '../services/trend'
+import {
+  getLatestTwoSnapshots,
+  getEmojiSnapshotsBySnapshotId,
+  getCustomEmojiHistory,
+  getSnapshotCount,
+  getDiversityHistory,
+} from '../services/database'
 import { config } from '../utils/config'
 import { logger } from '../utils/logger'
 
@@ -33,6 +49,13 @@ export async function executeEmojiAnalysis(
 
     // ランキングレポートの投稿
     await postRankingReport(client, analysisResult, analysisInfo)
+
+    // スナップショット保存（非致命的）
+    await saveAnalysisSnapshot(
+      config.turso,
+      analysisResult,
+      analysisInfo
+    ).catch((e) => logger.error('スナップショット保存失敗', { error: String(e) }))
 
     logger.info('🎉 絵文字使用率分析が正常に完了しました')
     return analysisResult
@@ -64,6 +87,13 @@ export async function executeWorstRankingAnalysis(
     // ワーストランキングレポートの投稿
     await postWorstRankingReport(client, analysisResult, analysisInfo)
 
+    // スナップショット保存（非致命的）
+    await saveAnalysisSnapshot(
+      config.turso,
+      analysisResult,
+      analysisInfo
+    ).catch((e) => logger.error('スナップショット保存失敗', { error: String(e) }))
+
     logger.info('🎉 ワーストランキング分析が正常に完了しました')
     return analysisResult
   } catch (error: unknown) {
@@ -94,6 +124,13 @@ export async function executeCustomAnalysis(
     if (postToChannel) {
       await postRankingReport(client, analysisResult, analysisInfo)
     }
+
+    // スナップショット保存（非致命的）
+    await saveAnalysisSnapshot(
+      config.turso,
+      analysisResult,
+      analysisInfo
+    ).catch((e) => logger.error('スナップショット保存失敗', { error: String(e) }))
 
     logger.info('✅ カスタム期間分析が完了')
     return {
@@ -132,6 +169,13 @@ export async function executeCustomWorstAnalysis(
     if (postToChannel) {
       await postWorstRankingReport(client, analysisResult, analysisInfo)
     }
+
+    // スナップショット保存（非致命的）
+    await saveAnalysisSnapshot(
+      config.turso,
+      analysisResult,
+      analysisInfo
+    ).catch((e) => logger.error('スナップショット保存失敗', { error: String(e) }))
 
     logger.info('✅ カスタム期間ワースト分析が完了')
     return {
@@ -230,6 +274,132 @@ export async function executeUnusedEmojisAnalysis(
   } catch (error: unknown) {
     logger.logError(error as Error, '未使用絵文字検出エラー')
     throw error
+  }
+}
+
+/**
+ * トレンド分析の実行
+ * 直近2つのスナップショットを比較してトレンドレポートを返す
+ */
+export async function executeTrendAnalysis(): Promise<TrendReport | null> {
+  try {
+    const snapshots = await getLatestTwoSnapshots(config.turso)
+    if (snapshots.length < 2) return null
+
+    const current = snapshots[0]!
+    const previous = snapshots[1]!
+
+    const [currentEmojis, previousEmojis] = await Promise.all([
+      getEmojiSnapshotsBySnapshotId(config.turso, current.id),
+      getEmojiSnapshotsBySnapshotId(config.turso, previous.id),
+    ])
+
+    return calculateTrends(
+      currentEmojis,
+      previousEmojis,
+      current.snapshot_date,
+      previous.snapshot_date
+    )
+  } catch (error) {
+    logger.logError(error as Error, 'トレンド分析エラー')
+    return null
+  }
+}
+
+/**
+ * 多様性分析の実行
+ * ライブデータから多様性指数を計算する
+ */
+export async function executeDiversityAnalysis(
+  client: Client<true>
+): Promise<{
+  report: DiversityReport
+  history: Array<{
+    snapshot_date: string
+    diversity_entropy: number | null
+    diversity_entropy_normalized: number | null
+    diversity_gini: number | null
+  }>
+}> {
+  try {
+    logger.info('多様性指数を計算中...')
+
+    const analysisInfo = await fetchMessagesAndReactions(
+      client,
+      config.channels.targets,
+      config.analysis.days
+    )
+    const analysisResult = analyzeEmojiUsage(analysisInfo.reactions, client)
+    const counts = analysisResult.emojiStats.map((e) => e.totalCount)
+    const report = calculateDiversityReport(counts)
+
+    // 履歴データを取得（DB接続時のみ）
+    const history = await getDiversityHistory(config.turso)
+
+    return { report, history }
+  } catch (error) {
+    logger.logError(error as Error, '多様性分析エラー')
+    throw error
+  }
+}
+
+/**
+ * カスタム絵文字ROI分析の実行
+ */
+export async function executeROIAnalysis(): Promise<ROIReport | null> {
+  try {
+    const snapshotCount = await getSnapshotCount(config.turso)
+    if (snapshotCount === 0) return null
+
+    const historyRows = await getCustomEmojiHistory(config.turso)
+    if (historyRows.length === 0) return null
+
+    // 絵文字ごとにグルーピング
+    const emojiMap = new Map<
+      string,
+      {
+        name: string
+        displayFormat: string
+        history: Array<{ date: string; count: number; rate: number }>
+      }
+    >()
+
+    for (const row of historyRows) {
+      if (!emojiMap.has(row.identifier)) {
+        emojiMap.set(row.identifier, {
+          name: row.name,
+          displayFormat: row.display_format,
+          history: [],
+        })
+      }
+      emojiMap.get(row.identifier)!.history.push({
+        date: row.snapshot_date,
+        count: row.total_count,
+        rate: row.usage_rate,
+      })
+    }
+
+    const emojis = Array.from(emojiMap.entries()).map(
+      ([identifier, data]) => {
+        const latest = data.history[data.history.length - 1]!
+        return {
+          identifier,
+          name: data.name,
+          displayFormat: data.displayFormat,
+          history: data.history,
+          latestCount: latest.count,
+          latestRate: latest.rate,
+        }
+      }
+    )
+
+    // 最新の使用率順でソート
+    emojis.sort((a, b) => b.latestRate - a.latestRate)
+
+    return { emojis, snapshotCount }
+  } catch (error) {
+    logger.logError(error as Error, 'ROI分析エラー')
+    return null
   }
 }
 
@@ -371,6 +541,110 @@ export async function handleManualCommand(message: Message): Promise<void> {
         break
       }
 
+      case 'trend': {
+        await textChannel.send('トレンドレポートを作成するね〜！')
+        const trendReport = await executeTrendAnalysis()
+        if (!trendReport) {
+          await textChannel.send(
+            'まだデータが足りないよ。2回以上の分析実行後に使えるようになるよ〜'
+          )
+        } else {
+          const { trendLabelToDisplay, trendLabelToIcon } = await import(
+            '../services/trend'
+          )
+          const surging = trendReport.trends
+            .filter(
+              (t) =>
+                t.label === 'surge' ||
+                t.label === 'rising' ||
+                t.label === 'new'
+            )
+            .slice(0, 10)
+          const declining = trendReport.trends
+            .filter(
+              (t) =>
+                t.label === 'plunge' ||
+                t.label === 'declining' ||
+                t.label === 'gone'
+            )
+            .slice(0, 10)
+
+          let text = `📊 **絵文字トレンドレポート**\n**期間**: ${trendReport.previousDate} → ${trendReport.currentDate}\n\n`
+          if (surging.length > 0) {
+            text += '**上昇トレンド**\n'
+            text += surging
+              .map(
+                (t) =>
+                  `${trendLabelToIcon(t.label)} ${t.displayFormat} ${trendLabelToDisplay(t.label)} (${t.rateDiff >= 0 ? '+' : ''}${t.rateDiff.toFixed(1)}%)`
+              )
+              .join('\n')
+            text += '\n\n'
+          }
+          if (declining.length > 0) {
+            text += '**下降トレンド**\n'
+            text += declining
+              .map(
+                (t) =>
+                  `${trendLabelToIcon(t.label)} ${t.displayFormat} ${trendLabelToDisplay(t.label)} (${t.rateDiff.toFixed(1)}%)`
+              )
+              .join('\n')
+          }
+          if (surging.length === 0 && declining.length === 0) {
+            text += '全体的に横ばいだよ〜'
+          }
+          await textChannel.send(text)
+        }
+        break
+      }
+
+      case 'diversity': {
+        await textChannel.send('多様性指数を計算するね〜！')
+        if (message.client.isReady()) {
+          const { report, history } = await executeDiversityAnalysis(
+            message.client
+          )
+          let text =
+            `🌈 **絵文字多様性レポート**\n\n` +
+            `**Shannon Entropy**: ${report.entropy.toFixed(3)} bit\n` +
+            `**正規化エントロピー**: ${report.entropyNormalized.toFixed(3)} (0=偏り / 1=均等)\n` +
+            `**Gini係数**: ${report.gini.toFixed(3)} (0=平等 / 1=不平等)\n` +
+            `**ユニーク絵文字数**: ${report.uniqueCount}\n` +
+            `**総使用回数**: ${report.totalUsage}\n`
+
+          if (history.length > 1) {
+            text += '\n**推移**\n'
+            for (const h of history.slice(-5)) {
+              const norm = h.diversity_entropy_normalized
+              text += `${h.snapshot_date}: 正規化エントロピー ${norm !== null ? norm.toFixed(3) : 'N/A'} / Gini ${h.diversity_gini !== null ? h.diversity_gini.toFixed(3) : 'N/A'}\n`
+            }
+          }
+          await textChannel.send(text)
+        }
+        break
+      }
+
+      case 'roi': {
+        await textChannel.send('カスタム絵文字のROIを調べるね〜！')
+        const roiReport = await executeROIAnalysis()
+        if (!roiReport || roiReport.emojis.length === 0) {
+          await textChannel.send(
+            'まだデータが足りないよ。分析を実行してスナップショットを蓄積してね〜'
+          )
+        } else {
+          const top10 = roiReport.emojis.slice(0, 10)
+          let text = `📈 **カスタム絵文字 ROI レポート**\n**スナップショット数**: ${roiReport.snapshotCount}\n\n`
+          text += '**よく使われてるカスタム絵文字 TOP10**\n'
+          text += top10
+            .map(
+              (e, i) =>
+                `${i + 1}. ${e.displayFormat} ${e.latestCount}回 (${e.latestRate.toFixed(1)}%)`
+            )
+            .join('\n')
+          await textChannel.send(text)
+        }
+        break
+      }
+
       case 'help': {
         const helpText = `
 **EMOJI 集計ちゃん - コマンド一覧だよ〜♪**
@@ -384,6 +658,11 @@ export async function handleManualCommand(message: Message): Promise<void> {
 \`!emoji worst\` - 設定期間でワーストランキングを調べるよ〜！
 \`!emoji days <日数> worst\` - 指定期間のワーストランキング（例: \`!emoji days 30 worst\`）
 \`!emoji months <月数> worst\` - 指定期間のワーストランキング（例: \`!emoji months 3 worst\`）
+
+**📊 分析機能:**
+\`!emoji trend\` - 前回と今回の比較トレンドレポート
+\`!emoji diversity\` - 絵文字使用の多様性指数を表示
+\`!emoji roi\` - カスタム絵文字の採用状況を表示
 
 **🔍 その他の機能:**
 \`!emoji unused\` - 未使用のカスタム絵文字を5個表示するよ〜！
@@ -400,7 +679,9 @@ export async function handleManualCommand(message: Message): Promise<void> {
 • \`!emoji days 7 worst\` → 過去1週間のワーストランキング
 • \`!emoji months 1\` → 過去1ヶ月の人気ランキング
 • \`!emoji months 1 worst\` → 過去1ヶ月のワーストランキング
-• \`!emoji unused\` → 最近使われていないカスタム絵文字を発見
+• \`!emoji trend\` → 絵文字の使用トレンドを確認
+• \`!emoji diversity\` → 絵文字の多様性を確認
+• \`!emoji roi\` → カスタム絵文字の採用状況を確認
 
 頑張って集計するから、お気軽に声をかけてね〜♪
         `

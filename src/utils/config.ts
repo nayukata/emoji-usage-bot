@@ -70,6 +70,14 @@ export const config: BotConfig = {
 
   // 開発モード設定
   development: process.env.NODE_ENV === 'development',
+
+  // Turso設定（オプショナル）
+  turso: process.env.TURSO_DATABASE_URL
+    ? {
+        url: process.env.TURSO_DATABASE_URL,
+        authToken: process.env.TURSO_AUTH_TOKEN || '',
+      }
+    : null,
 }
 
 /**
@@ -127,5 +135,6 @@ export function getConfigSummary(): Record<string, unknown> {
     topCount: config.analysis.topCount,
     schedule: config.schedule.cron || '手動実行のみ',
     development: config.development,
+    turso: config.turso ? '接続済み' : '未設定',
   }
 }

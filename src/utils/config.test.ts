@@ -172,7 +172,8 @@ describe('config.ts', () => {
         analysisDays: 14,
         topCount: 20,
         schedule: '手動実行のみ',
-        development: false
+        development: false,
+        turso: '未設定',
       })
     })
   })

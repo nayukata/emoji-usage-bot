@@ -195,6 +195,8 @@ export interface BotConfig {
   }
   /** 開発モード */
   development: boolean
+  /** Turso接続設定（オプショナル） */
+  turso: TursoConfig | null
 }
 
 /**
@@ -207,4 +209,158 @@ export interface TestAnalysisResult {
   simpleText: string
   /** 分析情報 */
   analysisInfo: AnalysisInfo
+}
+
+/* ============================
+ * DB / スナップショット関連型
+ * ============================ */
+
+/**
+ * snapshots テーブルの行型
+ */
+export interface SnapshotRow {
+  id: number
+  snapshot_date: string
+  period_days: number
+  total_messages: number
+  total_reactions: number
+  unique_emojis: number
+  unicode_count: number
+  unicode_usage: number
+  custom_count: number
+  custom_usage: number
+  diversity_entropy: number | null
+  diversity_entropy_normalized: number | null
+  diversity_gini: number | null
+  created_at: string
+}
+
+/**
+ * emoji_snapshots テーブルの行型
+ */
+export interface EmojiSnapshotRow {
+  id: number
+  snapshot_id: number
+  identifier: string
+  name: string
+  type: EmojiType
+  emoji_id: string | null
+  animated: number
+  total_count: number
+  message_count: number
+  usage_rate: number
+  avg_per_message: number
+  display_format: string
+}
+
+/**
+ * channel_snapshots テーブルの行型
+ */
+export interface ChannelSnapshotRow {
+  id: number
+  snapshot_id: number
+  channel_id: string
+  channel_name: string | null
+  total_reactions: number
+  unique_emojis: number
+  message_count: number
+}
+
+/* ============================
+ * 多様性指数
+ * ============================ */
+
+/**
+ * 多様性レポート
+ */
+export interface DiversityReport {
+  /** Shannon entropy (bit) */
+  entropy: number
+  /** 正規化エントロピー (0-1) */
+  entropyNormalized: number
+  /** Gini coefficient (0-1) */
+  gini: number
+  /** ユニーク絵文字数 */
+  uniqueCount: number
+  /** 総使用回数 */
+  totalUsage: number
+}
+
+/* ============================
+ * トレンド
+ * ============================ */
+
+/**
+ * トレンドラベル
+ */
+export type TrendLabel =
+  | 'surge'
+  | 'rising'
+  | 'stable'
+  | 'declining'
+  | 'plunge'
+  | 'new'
+  | 'gone'
+
+/**
+ * 絵文字トレンド情報
+ */
+export interface EmojiTrend {
+  identifier: string
+  name: string
+  displayFormat: string
+  currentCount: number
+  previousCount: number
+  currentRate: number
+  previousRate: number
+  rateDiff: number
+  label: TrendLabel
+}
+
+/**
+ * トレンドレポート
+ */
+export interface TrendReport {
+  currentDate: string
+  previousDate: string
+  trends: EmojiTrend[]
+}
+
+/* ============================
+ * ROI
+ * ============================ */
+
+/**
+ * カスタム絵文字ROI情報
+ */
+export interface EmojiROI {
+  identifier: string
+  name: string
+  displayFormat: string
+  /** 各スナップショットでの使用回数推移 */
+  history: Array<{ date: string; count: number; rate: number }>
+  /** 最新の使用回数 */
+  latestCount: number
+  /** 最新の使用率 */
+  latestRate: number
+}
+
+/**
+ * ROIレポート
+ */
+export interface ROIReport {
+  emojis: EmojiROI[]
+  snapshotCount: number
+}
+
+/* ============================
+ * Turso 設定
+ * ============================ */
+
+/**
+ * Turso接続設定
+ */
+export interface TursoConfig {
+  url: string
+  authToken: string
 }

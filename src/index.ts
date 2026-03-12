@@ -8,6 +8,7 @@ import {
 } from './services/scheduler'
 import { logger } from './utils/logger'
 import { config, getConfigSummary } from './utils/config'
+import { initializeSchema, closeDatabase } from './services/database'
 
 /**
  * ヘルスチェック情報の型定義
@@ -73,6 +74,9 @@ async function startApplication(): Promise<void> {
     // ヘルスチェック用HTTPサーバー（デプロイ用）
     server = createHealthServer()
 
+    // データベース初期化（Turso設定がある場合のみ）
+    await initializeSchema(config.turso)
+
     // BOT接続
     client = await connectBot()
 
@@ -101,6 +105,9 @@ async function startApplication(): Promise<void> {
       try {
         // スケジュール停止
         stopScheduledAnalysis()
+
+        // データベース切断
+        closeDatabase()
 
         // BOT切断
         if (client) {

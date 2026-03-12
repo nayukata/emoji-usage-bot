@@ -1,24 +1,25 @@
-# Node.js 22を使用
-FROM node:22-alpine
+# ビルドステージ
+FROM node:22-alpine AS builder
 
-# 作業ディレクトリを設定
 WORKDIR /app
 
-# パッケージファイルをコピー
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
-# pnpmをインストール
-RUN npm install -g pnpm
-
-# 依存関係をインストール
-RUN pnpm install --frozen-lockfile --prod
-
-# アプリケーションコードをコピー
+COPY tsconfig.json ./
 COPY src/ ./src/
+RUN pnpm build
 
-# ポート3000を公開（Railwayで必要）
+# 実行ステージ
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile --prod
+
+COPY --from=builder /app/dist ./dist
+
 EXPOSE 3000
 
-# アプリケーションを起動
 CMD ["pnpm", "start"]

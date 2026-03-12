@@ -33,6 +33,7 @@
     "ranking"
   ],
   "dependencies": {
+    "@libsql/client": "^0.17.0",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "node-cron": "^3.0.3"

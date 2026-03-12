@@ -12,7 +12,14 @@ import {
   executeCustomWorstAnalysis,
   executeTestAnalysis,
   executeUnusedEmojisAnalysis,
+  executeTrendAnalysis,
+  executeDiversityAnalysis,
+  executeROIAnalysis,
 } from './commands'
+import {
+  trendLabelToDisplay,
+  trendLabelToIcon,
+} from '../services/trend'
 import { config } from '../utils/config'
 import { logger } from '../utils/logger'
 
@@ -81,6 +88,21 @@ export const slashCommands = [
     )
     .addSubcommand((subcommand) =>
       subcommand.setName('help').setDescription('使い方とコマンド一覧を表示')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('trend')
+        .setDescription('前回と今回の比較トレンドレポートを表示')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('diversity')
+        .setDescription('絵文字使用の多様性指数を表示')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('roi')
+        .setDescription('カスタム絵文字の採用状況を表示')
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -243,6 +265,145 @@ export async function handleSlashCommand(
         break
       }
 
+      case 'trend': {
+        await interaction.reply('トレンドレポートを作成するね〜！')
+        const trendReport = await executeTrendAnalysis()
+
+        if (!trendReport) {
+          await interaction.followUp(
+            'まだデータが足りないよ。2回以上の分析実行後に使えるようになるよ〜'
+          )
+          break
+        }
+
+        const surgeAndRising = trendReport.trends.filter(
+          (t) => t.label === 'surge' || t.label === 'rising' || t.label === 'new'
+        ).slice(0, 10)
+        const decliningAndPlunge = trendReport.trends.filter(
+          (t) => t.label === 'plunge' || t.label === 'declining' || t.label === 'gone'
+        ).slice(0, 10)
+
+        let trendText =
+          `**期間**: ${trendReport.previousDate} → ${trendReport.currentDate}\n\n`
+
+        if (surgeAndRising.length > 0) {
+          trendText += '**上昇トレンド**\n'
+          trendText += surgeAndRising
+            .map(
+              (t) =>
+                `${trendLabelToIcon(t.label)} ${t.displayFormat} ${trendLabelToDisplay(t.label)} (${t.rateDiff >= 0 ? '+' : ''}${t.rateDiff.toFixed(1)}%)`
+            )
+            .join('\n')
+          trendText += '\n\n'
+        }
+
+        if (decliningAndPlunge.length > 0) {
+          trendText += '**下降トレンド**\n'
+          trendText += decliningAndPlunge
+            .map(
+              (t) =>
+                `${trendLabelToIcon(t.label)} ${t.displayFormat} ${trendLabelToDisplay(t.label)} (${t.rateDiff.toFixed(1)}%)`
+            )
+            .join('\n')
+        }
+
+        if (surgeAndRising.length === 0 && decliningAndPlunge.length === 0) {
+          trendText += '全体的に横ばいだよ〜'
+        }
+
+        await interaction.followUp(`📊 **絵文字トレンドレポート**\n\n${trendText}`)
+        break
+      }
+
+      case 'diversity': {
+        await interaction.reply('多様性指数を計算するね〜！')
+        const { report, history } = await executeDiversityAnalysis(
+          interaction.client as Client<true>
+        )
+
+        let diversityText =
+          `**Shannon Entropy**: ${report.entropy.toFixed(3)} bit\n` +
+          `**正規化エントロピー**: ${report.entropyNormalized.toFixed(3)} (0=偏り / 1=均等)\n` +
+          `**Gini係数**: ${report.gini.toFixed(3)} (0=平等 / 1=不平等)\n` +
+          `**ユニーク絵文字数**: ${report.uniqueCount}\n` +
+          `**総使用回数**: ${report.totalUsage}\n`
+
+        // 解釈テキスト
+        if (report.entropyNormalized >= 0.8) {
+          diversityText += '\n多様な絵文字が満遍なく使われてるよ〜！'
+        } else if (report.entropyNormalized >= 0.5) {
+          diversityText += '\nまずまずの多様性だね〜'
+        } else {
+          diversityText += '\n特定の絵文字に偏ってるかも〜もっといろんな絵文字使ってみて！'
+        }
+
+        // 推移データがあれば追加
+        if (history.length > 1) {
+          diversityText += '\n\n**推移**\n'
+          for (const h of history.slice(-5)) {
+            const norm = h.diversity_entropy_normalized
+            diversityText += `${h.snapshot_date}: 正規化エントロピー ${norm !== null ? norm.toFixed(3) : 'N/A'} / Gini ${h.diversity_gini !== null ? h.diversity_gini.toFixed(3) : 'N/A'}\n`
+          }
+        }
+
+        await interaction.followUp(`🌈 **絵文字多様性レポート**\n\n${diversityText}`)
+        break
+      }
+
+      case 'roi': {
+        await interaction.reply('カスタム絵文字のROIを調べるね〜！')
+        const roiReport = await executeROIAnalysis()
+
+        if (!roiReport || roiReport.emojis.length === 0) {
+          await interaction.followUp(
+            'まだデータが足りないよ。分析を実行してスナップショットを蓄積してね〜'
+          )
+          break
+        }
+
+        const top10 = roiReport.emojis.slice(0, 10)
+        const bottom5 = roiReport.emojis.slice(-5).reverse()
+
+        let roiText = `**スナップショット数**: ${roiReport.snapshotCount}\n\n`
+
+        roiText += '**よく使われてるカスタム絵文字 TOP10**\n'
+        roiText += top10
+          .map(
+            (e, i) =>
+              `${i + 1}. ${e.displayFormat} ${e.latestCount}回 (${e.latestRate.toFixed(1)}%)`
+          )
+          .join('\n')
+
+        if (bottom5.length > 0) {
+          roiText += '\n\n**あまり使われていないカスタム絵文字**\n'
+          roiText += bottom5
+            .map(
+              (e) =>
+                `${e.displayFormat} ${e.latestCount}回 (${e.latestRate.toFixed(1)}%)`
+            )
+            .join('\n')
+        }
+
+        // 履歴があれば推移を表示（上位3件のみ）
+        const withHistory = roiReport.emojis
+          .filter((e) => e.history.length > 1)
+          .slice(0, 3)
+
+        if (withHistory.length > 0) {
+          roiText += '\n\n**採用推移**\n'
+          for (const e of withHistory) {
+            const sparkline = e.history
+              .slice(-5)
+              .map((h) => `${h.date}: ${h.count}回`)
+              .join(' → ')
+            roiText += `${e.displayFormat}: ${sparkline}\n`
+          }
+        }
+
+        await interaction.followUp(`📈 **カスタム絵文字 ROI レポート**\n\n${roiText}`)
+        break
+      }
+
       case 'worst':
         await interaction.reply(
           'ワーストランキングの分析を始めるね〜！お待ちください♪'
@@ -309,6 +470,11 @@ export async function handleSlashCommand(
 \`/emoji worst\` - 設定期間でワーストランキングを調べるよ〜！
 \`/emoji worst-days <日数>\` - 指定期間のワーストランキング
 \`/emoji worst-months <月数>\` - 指定期間のワーストランキング
+
+**📊 分析機能:**
+\`/emoji trend\` - 前回と今回の比較トレンドレポート
+\`/emoji diversity\` - 絵文字使用の多様性指数を表示
+\`/emoji roi\` - カスタム絵文字の採用状況を表示
 
 **🔍 その他の機能:**
 \`/emoji unused\` - 未使用のカスタム絵文字を5個表示するよ〜！
