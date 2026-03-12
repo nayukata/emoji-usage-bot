@@ -232,13 +232,15 @@ function createChannelRankingEmbed(
 export async function postRankingReport(
   client: Client<true>,
   analysisResult: AnalysisResult,
-  analysisInfo: AnalysisInfo
+  analysisInfo: AnalysisInfo,
+  reportChannelId?: string
 ): Promise<void> {
   try {
     const { emojiStats, typeStats, channelStats, summary } = analysisResult
 
-    // 投稿先チャンネルを取得
-    const channel = await client.channels.fetch(config.channels.report)
+    // 投稿先チャンネルを取得（指定がなければ設定値を使用）
+    const targetChannelId = reportChannelId || config.channels.report
+    const channel = await client.channels.fetch(targetChannelId)
     if (!channel) {
       throw new Error(
         `投稿先チャンネル ${config.channels.report} が見つかりません`
@@ -411,13 +413,15 @@ function createWorstRankingEmbed(
 export async function postWorstRankingReport(
   client: Client<true>,
   analysisResult: AnalysisResult,
-  analysisInfo: AnalysisInfo
+  analysisInfo: AnalysisInfo,
+  reportChannelId?: string
 ): Promise<void> {
   try {
     const { emojiStats, typeStats, summary } = analysisResult
 
-    // 投稿先チャンネルを取得
-    const channel = await client.channels.fetch(config.channels.report)
+    // 投稿先チャンネルを取得（指定がなければ設定値を使用）
+    const targetChannelId = reportChannelId || config.channels.report
+    const channel = await client.channels.fetch(targetChannelId)
     if (!channel) {
       throw new Error(
         `投稿先チャンネル ${config.channels.report} が見つかりません`

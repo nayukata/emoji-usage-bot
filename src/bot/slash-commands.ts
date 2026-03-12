@@ -157,11 +157,13 @@ export async function handleSlashCommand(
     interaction.guildId ?? 'DM'
   )
 
+  const channelId = interaction.channelId
+
   try {
     switch (subcommand) {
       case 'run':
         await interaction.reply('絵文字の分析を始めるね〜！お待ちください♪')
-        await executeEmojiAnalysis(interaction.client as Client<true>)
+        await executeEmojiAnalysis(interaction.client as Client<true>, channelId)
         break
 
       case 'days': {
@@ -177,7 +179,8 @@ export async function handleSlashCommand(
         await executeCustomAnalysis(
           interaction.client as Client<true>,
           days,
-          true
+          true,
+          channelId
         )
         break
       }
@@ -196,7 +199,8 @@ export async function handleSlashCommand(
         await executeCustomAnalysis(
           interaction.client as Client<true>,
           days,
-          true
+          true,
+          channelId
         )
         break
       }
@@ -408,7 +412,7 @@ export async function handleSlashCommand(
         await interaction.reply(
           'ワーストランキングの分析を始めるね〜！お待ちください♪'
         )
-        await executeWorstRankingAnalysis(interaction.client as Client<true>)
+        await executeWorstRankingAnalysis(interaction.client as Client<true>, channelId)
         break
 
       case 'worst-days': {
@@ -424,7 +428,8 @@ export async function handleSlashCommand(
         await executeCustomWorstAnalysis(
           interaction.client as Client<true>,
           days,
-          true
+          true,
+          channelId
         )
         break
       }
@@ -443,7 +448,8 @@ export async function handleSlashCommand(
         await executeCustomWorstAnalysis(
           interaction.client as Client<true>,
           days,
-          true
+          true,
+          channelId
         )
         break
       }

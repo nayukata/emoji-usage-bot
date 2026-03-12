@@ -52,7 +52,9 @@ export const config: BotConfig = {
 
   // チャンネル設定
   channels: {
-    targets: getArrayEnv('TARGET_CHANNELS'),
+    targets: process.env.TARGET_CHANNELS?.trim().toLowerCase() === 'all'
+      ? ['all']
+      : getArrayEnv('TARGET_CHANNELS'),
     report: requireEnv('REPORT_CHANNEL'),
   },
 
@@ -87,9 +89,13 @@ export function validateConfig(): void {
   // 必須チェックは既にrequireEnv()で実行済み
 
   // 追加の検証
+  const isAllChannels =
+    config.channels.targets.length === 1 &&
+    config.channels.targets[0] === 'all'
+
   if (config.channels.targets.length === 0) {
     throw new Error(
-      'TARGET_CHANNELS に少なくとも1つのチャンネルIDを設定してください'
+      'TARGET_CHANNELS に少なくとも1つのチャンネルIDを設定してください（全チャンネル対象にする場合は "all"）'
     )
   }
 
@@ -114,11 +120,13 @@ export function validateConfig(): void {
     )
   }
 
-  for (const channelId of config.channels.targets) {
-    if (!discordIdPattern.test(channelId)) {
-      throw new Error(
-        `TARGET_CHANNELS に無効なチャンネルIDが含まれています: ${channelId}`
-      )
+  if (!isAllChannels) {
+    for (const channelId of config.channels.targets) {
+      if (!discordIdPattern.test(channelId)) {
+        throw new Error(
+          `TARGET_CHANNELS に無効なチャンネルIDが含まれています: ${channelId}`
+        )
+      }
     }
   }
 }

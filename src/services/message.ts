@@ -1,5 +1,5 @@
 // メッセージ取得サービス - チャンネルからメッセージ履歴とリアクションを取得する
-import type { Client, TextChannel, Collection, Message } from 'discord.js'
+import { ChannelType, type Client, type TextChannel, type Collection, type Message } from 'discord.js'
 import type { ReactionData, MessageFetchResult } from '../types/index'
 import { logger } from '../utils/logger'
 
@@ -142,17 +142,44 @@ function extractReactionsFromMessage(message: Message): ReactionData[] {
 /**
  * 複数チャンネルからメッセージとリアクションを取得
  */
+/**
+ * チャンネルIDリストを解決する
+ * "all" が指定されている場合、ギルドの全テキストチャンネルIDを返す
+ */
+function resolveChannelIds(
+  client: Client<true>,
+  channelIds: string[]
+): string[] {
+  const isAll =
+    channelIds.length === 1 && channelIds[0] === 'all'
+
+  if (!isAll) return channelIds
+
+  const textChannelIds: string[] = []
+  for (const guild of client.guilds.cache.values()) {
+    for (const channel of guild.channels.cache.values()) {
+      if (channel.type === ChannelType.GuildText) {
+        textChannelIds.push(channel.id)
+      }
+    }
+  }
+
+  logger.info(`全チャンネルモード: ${textChannelIds.length} 個のテキストチャンネルを検出`)
+  return textChannelIds
+}
+
 export async function fetchMessagesAndReactions(
   client: Client<true>,
   channelIds: string[],
   days: number
 ): Promise<MessageFetchResult> {
+  const resolvedIds = resolveChannelIds(client, channelIds)
   const allReactions: ReactionData[] = []
   let totalMessages = 0
 
-  logger.logAnalysisStart(channelIds.length, days)
+  logger.logAnalysisStart(resolvedIds.length, days)
 
-  for (const channelId of channelIds) {
+  for (const channelId of resolvedIds) {
     try {
       const channel = await client.channels.fetch(channelId)
 

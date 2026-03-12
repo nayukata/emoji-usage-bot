@@ -32,7 +32,8 @@ import { logger } from '../utils/logger'
  * 絵文字使用率分析の実行
  */
 export async function executeEmojiAnalysis(
-  client: Client<true>
+  client: Client<true>,
+  reportChannelId?: string
 ): Promise<AnalysisResult> {
   try {
     logger.info('🎯 絵文字使用率分析を実行中...')
@@ -48,7 +49,7 @@ export async function executeEmojiAnalysis(
     const analysisResult = analyzeEmojiUsage(analysisInfo.reactions, client)
 
     // ランキングレポートの投稿
-    await postRankingReport(client, analysisResult, analysisInfo)
+    await postRankingReport(client, analysisResult, analysisInfo, reportChannelId)
 
     // スナップショット保存（非致命的）
     await saveAnalysisSnapshot(
@@ -69,7 +70,8 @@ export async function executeEmojiAnalysis(
  * ワーストランキング分析の実行
  */
 export async function executeWorstRankingAnalysis(
-  client: Client<true>
+  client: Client<true>,
+  reportChannelId?: string
 ): Promise<AnalysisResult> {
   try {
     logger.info('🎯 ワーストランキング分析を実行中...')
@@ -85,7 +87,7 @@ export async function executeWorstRankingAnalysis(
     const analysisResult = analyzeEmojiUsage(analysisInfo.reactions, client)
 
     // ワーストランキングレポートの投稿
-    await postWorstRankingReport(client, analysisResult, analysisInfo)
+    await postWorstRankingReport(client, analysisResult, analysisInfo, reportChannelId)
 
     // スナップショット保存（非致命的）
     await saveAnalysisSnapshot(
@@ -108,7 +110,8 @@ export async function executeWorstRankingAnalysis(
 export async function executeCustomAnalysis(
   client: Client<true>,
   days: number,
-  postToChannel = true
+  postToChannel = true,
+  reportChannelId?: string
 ): Promise<TestAnalysisResult> {
   try {
     logger.info(`📊 過去${days}日間の絵文字分析を実行中...`)
@@ -122,7 +125,7 @@ export async function executeCustomAnalysis(
     const analysisResult = analyzeEmojiUsage(analysisInfo.reactions, client)
 
     if (postToChannel) {
-      await postRankingReport(client, analysisResult, analysisInfo)
+      await postRankingReport(client, analysisResult, analysisInfo, reportChannelId)
     }
 
     // スナップショット保存（非致命的）
@@ -153,7 +156,8 @@ export async function executeCustomAnalysis(
 export async function executeCustomWorstAnalysis(
   client: Client<true>,
   days: number,
-  postToChannel = true
+  postToChannel = true,
+  reportChannelId?: string
 ): Promise<TestAnalysisResult> {
   try {
     logger.info(`📊 過去${days}日間のワーストランキング分析を実行中...`)
@@ -167,7 +171,7 @@ export async function executeCustomWorstAnalysis(
     const analysisResult = analyzeEmojiUsage(analysisInfo.reactions, client)
 
     if (postToChannel) {
-      await postWorstRankingReport(client, analysisResult, analysisInfo)
+      await postWorstRankingReport(client, analysisResult, analysisInfo, reportChannelId)
     }
 
     // スナップショット保存（非致命的）
@@ -446,7 +450,7 @@ export async function handleManualCommand(message: Message): Promise<void> {
       case 'run':
         await textChannel.send('絵文字の分析を始めるね〜！お待ちください♪')
         if (message.client.isReady()) {
-          await executeEmojiAnalysis(message.client)
+          await executeEmojiAnalysis(message.client, message.channelId)
         }
         break
 
@@ -455,7 +459,7 @@ export async function handleManualCommand(message: Message): Promise<void> {
           'ワーストランキングを分析するね〜！お待ちください♪'
         )
         if (message.client.isReady()) {
-          await executeWorstRankingAnalysis(message.client)
+          await executeWorstRankingAnalysis(message.client, message.channelId)
         }
         break
 
@@ -476,14 +480,14 @@ export async function handleManualCommand(message: Message): Promise<void> {
             `過去${days}日間のワーストランキングを調べるね〜！ちょっと待ってて♪`
           )
           if (message.client.isReady()) {
-            await executeCustomWorstAnalysis(message.client, days, true)
+            await executeCustomWorstAnalysis(message.client, days, true, message.channelId)
           }
         } else {
           await textChannel.send(
             `過去${days}日間の絵文字を調べるね〜！ちょっと待ってて♪`
           )
           if (message.client.isReady()) {
-            await executeCustomAnalysis(message.client, days, true)
+            await executeCustomAnalysis(message.client, days, true, message.channelId)
           }
         }
         break
@@ -508,14 +512,14 @@ export async function handleManualCommand(message: Message): Promise<void> {
             `過去${months}ヶ月間（約${days}日間）のワーストランキングを調べるね〜！がんばる♪`
           )
           if (message.client.isReady()) {
-            await executeCustomWorstAnalysis(message.client, days, true)
+            await executeCustomWorstAnalysis(message.client, days, true, message.channelId)
           }
         } else {
           await textChannel.send(
             `過去${months}ヶ月間（約${days}日間）の絵文字を調べるね〜！がんばる♪`
           )
           if (message.client.isReady()) {
-            await executeCustomAnalysis(message.client, days, true)
+            await executeCustomAnalysis(message.client, days, true, message.channelId)
           }
         }
         break
